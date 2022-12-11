@@ -1,0 +1,12 @@
+
+- Bild Solarpanels ersetzen wenn MeyerBurger montiert.
+ok - Bilder der Victron Module 
+ok - Victron Einstellungen für Power Queen Batterien
+- Victron MQQT
+  Schaltung
+  Gelötet
+  gehäuse
+
+- E-Ink M5paper
+
+- Keywords
