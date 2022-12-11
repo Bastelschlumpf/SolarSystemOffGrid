@@ -69,7 +69,7 @@ String getRTCDateString()
    M5.RTC.getDate(&date_struct);
 
    sprintf(buff,"%02d.%02d.%04d",
-      date_struct.day,  date_struct.mon, date_struct.year);
+      date_struct.day, date_struct.mon, date_struct.year);
 
    return (String) buff;
 }

@@ -40,6 +40,7 @@ SolarDisplay myDisplay(myData); // The global display helper class
 /* Start and M5Paper instance */
 void setup()
 {
+   // Serial default speed 115200
    InitEPD(true);
    if (StartWiFi(myData.wifiRSSI)) {
       UpdateRTCFromNTP();

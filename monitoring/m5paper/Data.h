@@ -141,7 +141,8 @@ public:
    MPPT         mppt;             //!< The MPPT data
    TasmotaElite tasmotaElite;     //!< The Tasmota Elite data
                                   
-   double       ppvHistory[PPV_HISTORY_SIZE]; //!< Solar panel power history.
+   float        ppvHistory[PPV_HISTORY_SIZE]; //!< Solar panel power history.
+   float        ppvMax;
 
 public:
    MyData()
@@ -152,6 +153,7 @@ public:
       , sht30Humidity(0)
    {
       memset(ppvHistory, 0, sizeof(ppvHistory));
+      ppvMax = 0;
    }
 
    void Dump();

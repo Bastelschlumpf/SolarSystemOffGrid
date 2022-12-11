@@ -20,12 +20,13 @@
   * Helper function to communicate with the IoBroker.
   */
 #pragma once
+#include "RTClib.h"
 #include <TimeLib.h>
-#include <ArduinoJson.h>
+#include <HTTPClient.h>
 
-#define IOBROKER_QUERY "/query/"
-#define IOBROKER_GET   "/get/"
-#define IOBROKER_PLAIN "/getPlainValue/"
+#define IOBROKER_QUERY     "/query/"
+#define IOBROKER_GET       "/get/"
+#define IOBROKER_GET_PLAIN "/getPlainValue/"
 
 
 /* Helper class for getting data from IoBroker. */
@@ -41,16 +42,15 @@ protected:
    size_t readChars(String &string, size_t length);
    String readString(int len);
    void   parseContentLen(int &len, String line);
-   bool   getPPVHistory(DynamicJsonDocument &doc);
+   bool   parsPPVHistory(float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate);
    
 public:
    IoBroker();
    ~IoBroker();
 
-   bool getDateTime  (String &dateTime, String topic);
-   bool getPlainValue(String &value,    String topic);
-   bool getPlainValue(double &value,    String topic);
-   bool getPPVHistory();
+   bool getPlainValue(String &value,       String topic, String method = IOBROKER_GET_PLAIN, String param = "");
+   bool getPlainValue(double &value,       String topic, String method = IOBROKER_GET_PLAIN, String param = "");
+   bool getPPVHistory(float ppvHistory[], float &ppvMax, String topic);
 };
 
 /* Constructor: Connect to the IoBroker server. */
@@ -104,7 +104,7 @@ int IoBroker::timedRead()
    
    do {
       c = client.read();
-      delay(5);
+      //delay(5);
       if (c >= 0) return c;
    } while(millis() - _startMillis < _timeout);
    return -1;     // -1 indicates timeout
@@ -115,20 +115,20 @@ size_t IoBroker::readChars(String &string, size_t length)
 {
    size_t count = 0;
 
-   // Serial.println("len: " + String(length)); 
+   //Serial.println("len: " + String(length)); 
    while (count < length) {
       int c = timedRead();
       if (c < 0) {
-         // Serial.println("break!");
+         Serial.println("break!");
          break;
       }
       string += (char) c;
       count++;
    }
-   // Serial.println("data: <" + string + ">"); 
+   //Serial.println("data: <" + string + ">"); 
    if (client.available()) {
       String rest = client.readString();
-      Serial.println("rest: " + String(rest));
+      //Serial.println("rest: " + String(rest));
    }
    return count;
 } 
@@ -157,18 +157,18 @@ void IoBroker::parseContentLen(int &len, String line)
    }
 }
 
-/* Read a dateTime value. */
-bool IoBroker::getDateTime(String &dateTime, String topic) 
+/* Read a String from IoBroker. */
+bool IoBroker::getPlainValue(String &string, String topic, String method /*= IOBROKER_GET_PLAIN*/, String param /*= ""*/) 
 {
    bool ret = false;
 
-   Serial.println("getDateTime()...");
+   Serial.println("getPlainValue()...");
    if (!client.connected()) {
       connect();
    }
    if (client.connected()) {
       int    len = 0;
-      String url = (String) IOBROKER_GET + topic;
+      String url = method + topic + param;
             
       // This will send the request to the server
       Serial.println("Send request! " + url);
@@ -178,139 +178,104 @@ bool IoBroker::getDateTime(String &dateTime, String topic)
       waitForAvailable();
       while (client.available()) {
          String line = client.readStringUntil('\n');
-         
-         parseContentLen(len , line);
+
+         parseContentLen(len, line);
          if (line == "\r") {
             break;
          }
       }    
       while (client.available()) {
-         String tsBegin = "\"lc\":";
-         String tsEnd   = "\"";
-         String body    = readString(len);
-
-         int index = body.indexOf(tsBegin);
-         if (index != -1) {
-            int indexEnd = body.indexOf(tsEnd, index + tsBegin.length());
-
-            if (indexEnd) {
-               String ts = body.substring(index + tsBegin.length(), indexEnd - 1);
-
-               if (ts.length() > 0) {
-                  char      buff[32];
-                  long long dateTimeMS = atoll(ts.c_str());
-                  time_t    datetime   = dateTimeMS / 1000;
-      
-                  sprintf(buff, "%02d.%02d.%02d %02d:%02d:%02d", 
-                     day(datetime),  month(datetime),  year(datetime), 
-                     hour(datetime), minute(datetime), second(datetime));
-
-                  dateTime = buff;
-                  ret = true;
-               }
-            }
-         }
+         //Serial.println(len);
+         string += readString(len);
+         //Serial.println("read...");
+         ret = true;
       }    
       client.flush();
+      if (string.length() < 100) {
+         Serial.println("Plain value: " + string);
+      } else {
+         Serial.println("Plain value: " + string.substring(0, 100) + "...");
+      }
    }
    return ret;
 }
 
 /* Read a plain value. */
-bool IoBroker::getPlainValue(double &value, String topic) 
+bool IoBroker::getPlainValue(double &value, String topic, String method /*= IOBROKER_GET_PLAIN*/, String param /*= ""*/) 
 {
-   bool ret = false;
+   String plainString;
 
-   Serial.println("getPlainValue()...");
-   if (!client.connected()) {
-      connect();
-   }
-   if (client.connected()) {
-      int    len = 0;
-      String url = (String) IOBROKER_PLAIN + topic;
-            
-      // This will send the request to the server
-      Serial.println("Send request! " + url);
-      client.print((String) "GET " + url + " HTTP/1.1\r\n\r\n");
-      client.flush();
-
-      waitForAvailable();
-      while (client.available()) {
-         String line  = client.readStringUntil('\n');
-
-         parseContentLen(len , line);
-         if (line == "\r") {
-            break;
-         }
-      }    
-      while (client.available()) {
-         String body = readString(len);
-         
-         Serial.println(body);
-         value = body.toDouble();
-         ret   = true;
-      }    
-      client.flush();
-   }
-   return ret;
-}
-
-/* Read a plain value. */
-bool IoBroker::getPlainValue(String &value, String topic) 
-{
-   bool ret = false;
-
-   Serial.println("getPlainValue()...");
-   if (!client.connected()) {
-      connect();
-   }
-   if (client.connected()) {
-      int    len = 0;
-      String url = (String) IOBROKER_PLAIN + topic;
-            
-      // This will send the request to the server
-      Serial.println("Send request! " + url);
-      client.print((String) "GET " + url + " HTTP/1.1\r\n\r\n");
-      client.flush();
-
-      waitForAvailable();
-      while (client.available()) {
-         String line  = client.readStringUntil('\n');
-
-         parseContentLen(len , line);
-         if (line == "\r") {
-            break;
-         }
-      }    
-      while (client.available()) {
-         String body = readString(len);
-         
-         Serial.println(body);
-         value = body;
-         ret   = true;
-      }    
-      client.flush();
-   }
-   return ret;
-}
-
-/* Reads the history in the json object. */
-bool IoBroker::getPPVHistory(DynamicJsonDocument &doc)
-{
-   return true;
-}
-
-/* Reads the solar panel power over a specific time period. */
-bool IoBroker::getPPVHistory()
-{
-   DynamicJsonDocument doc(35 * 1024);
-   
-   if (getPPVHistory(doc)) {
-      // return Fill(doc.as<JsonObject>());
+   if (getPlainValue(plainString, topic, method)) {
+      value = plainString.toDouble();
+      return true;
    }
    return false;
 }
 
+/* Reads the solar panel power over a specific time period. */
+bool IoBroker::getPPVHistory(float ppvHistory[], float &ppvMax, String topic)
+{
+   DateTime toDay    = GetRTCTime();
+   DateTime toDate   = toDay  + TimeSpan( 1, 0, 0, 0);
+   DateTime fromDate = toDate - TimeSpan(30, 0, 0, 0);
+   String   plainString;
+   String   param = "?dateFrom=" + String(fromDate.year()) + "-" + String(fromDate.month()) + "-" + String(fromDate.day()) + 
+                    "&dateTo="   + String(toDate.year())   + "-" + String(toDate.month())   + "-" + String(toDate.day());
+
+   if (getPlainValue(plainString, topic, IOBROKER_QUERY, param)) {
+      return parsPPVHistory(ppvHistory, ppvMax, plainString, fromDate, toDate);
+   }
+   return false;
+}
+
+/* Pars the history json data, analyse it and put the result into the ppvHistoryArray. */
+bool IoBroker::parsPPVHistory(float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate)
+{
+   int historyCount[PPV_HISTORY_SIZE];
+   int index = historyData.indexOf('[');
+
+   ppvMax = 0.0;
+   memset(ppvHistory,   0, sizeof(ppvHistory));
+   memset(historyCount, 0, sizeof(historyCount));
+  
+   while (index >= 0) {
+      if (isDigit(historyData[index + 1])) {
+         int sep = historyData.indexOf(',', index + 1);
+
+         if (sep >= 0) {
+            int end = historyData.indexOf(']', sep + 1);
+
+            if (end >= 0) {
+               String value     = historyData.substring(index + 1, sep);
+               String timestamp = historyData.substring(sep + 1,   end - 3); // no milliseconds
+
+               DateTime jsonDate(timestamp.toInt());
+
+               int historyIndex = (double) PPV_HISTORY_SIZE / (double) (toDate.secondstime() - fromDate.secondstime()) * (double) (jsonDate.secondstime() - fromDate.secondstime());
+
+               if (historyIndex >= 0 && historyIndex < PPV_HISTORY_SIZE) {
+                  ppvHistory[historyIndex] += value.toFloat();
+                  historyCount[historyIndex]++;
+               } else {
+                  Serial.println("Wrong history index! [" + String(historyIndex) + ']');
+               }
+               Serial.printf("**** Index: %d Value: %s/%f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.c_str(), value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
+            }
+         }
+      }
+      index = historyData.indexOf('[', index + 1);
+   }
+   for (int i = 0; i < PPV_HISTORY_SIZE; i++) {
+      if (historyCount[i] > 0) {
+         ppvHistory[i] = ppvHistory[i] / historyCount[i];
+         if (ppvMax < ppvHistory[i]) {
+            ppvMax = ppvHistory[i];
+         }
+      }
+   }
+
+   return true;
+}
 
 /* Helper Funktion to read all the IoBroker data into the data object. */
 void GetIoBrokerValues(MyData &myData)
@@ -342,5 +307,5 @@ void GetIoBrokerValues(MyData &myData)
    ioBroker.getPlainValue(myData.mppt.mainVoltage,               "mqtt.0.mppt.V");
    ioBroker.getPlainValue(myData.mppt.panelVoltage,              "mqtt.0.mppt.VPV");
 
-   ioBroker.getPPVHistory();
+   ioBroker.getPPVHistory(myData.ppvHistory, myData.ppvMax, "mqtt.0.mppt.PPV");
 }

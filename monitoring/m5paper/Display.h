@@ -37,7 +37,7 @@ protected:
 protected:
    void   DrawCircle            (int32_t x, int32_t y, int32_t r, uint32_t color, int32_t degFrom = 0, int32_t degTo = 360);
    void   DrawIcon              (int x, int y, const uint16_t *icon, int dx = 64, int dy = 64, bool highContrast = false);
-   void   DrawGraph             (int x, int y, int dx, int dy, String title, int xMin, int xMax, int yMin, int yMax, float values[]);
+   void   DrawGraph             (int x, int y, int dx, int dy, int xMin, int xMax, int yMin, int yMax, float values[]);
    String FormatString          (String format, double data, int fillLen = 8);
    String StateOfOperation      (double value);
    
@@ -100,7 +100,7 @@ void SolarDisplay::DrawIcon(int x, int y, const uint16_t *icon, int dx /*= 64*/,
 }
 
 /* Draw a graph with x- and y-axis and values */
-void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String title, int xMin, int xMax, int yMin, int yMax, float values[])
+void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, int xMin, int xMax, int yMin, int yMax, float values[])
 {
    String yMinString = String(yMin);
    String yMaxString = String(yMax);
@@ -114,8 +114,6 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String title, int xMi
    int    iOldX      = 0;
    int    iOldY      = 0;
 
-   canvas.setTextSize(2);
-   canvas.drawCentreString(title, x + dx / 2, y + 10, 1);
    canvas.setTextSize(1);
    canvas.drawString(yMaxString, x + 5, graphY - 5);   
    canvas.drawString(yMinString, x + 5, graphY + graphDY - 3);   
@@ -124,18 +122,6 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String title, int xMi
    }
    
    canvas.drawRect(graphX, graphY, graphDX, graphDY, M5EPD_Canvas::G15);   
-   if (yMin < 0 && yMax > 0) { // null line?
-      float yValueDX = (float) graphDY / (yMax - yMin);
-      int   yPos     = graphY + graphDY - (0.0 - yMin) * yValueDX;
-
-      if (yPos > graphY + graphDY) yPos = graphY + graphDY;
-      if (yPos < graphY)           yPos = graphY;
-
-      canvas.drawString("0", graphX - 20, yPos);   
-      for (int xDash = graphX; xDash < graphX + graphDX - 10; xDash += 10) {
-         canvas.drawLine(xDash, yPos, xDash + 5, yPos, M5EPD_Canvas::G15);         
-      }
-   }
    for (int i = xMin; i <= xMax; i++) {
       float yValue   = values[i - xMin];
       float yValueDY = (float) graphDY / (yMax - yMin);
@@ -148,6 +134,7 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String title, int xMi
       canvas.fillCircle(xPos, yPos, 2, M5EPD_Canvas::G15);
       if (i > xMin) {
          canvas.drawLine(iOldX, iOldY, xPos, yPos, M5EPD_Canvas::G15);         
+         Serial.printf("drawLine: %d, %f : %d, %d, %d, %d\n", i, yValue, iOldX, iOldY, xPos, yPos);
       }
       iOldX = xPos;
       iOldY = yPos;
@@ -397,6 +384,13 @@ void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
    canvas.drawString("Battery",          x + 14, y +  89);
    canvas.drawString(mainVoltageInfo,    x + 14, y + 114);
    canvas.drawString(batteryCurrentInfo, x + 14, y + 134);
+
+   DrawGraph(x + 150, y - 5, PPV_HISTORY_SIZE, dy, 0, PPV_HISTORY_SIZE, 0, myData.ppvMax, myData.ppvHistory);
+
+   Serial.printf("HistoryMax: %f\n", myData.ppvMax);
+   for (int i = 0; i < PPV_HISTORY_SIZE; i++) {
+      Serial.printf("History: %d - %f\n", i, myData.ppvHistory[i]);
+   }
    
    DrawIcon(x + dx - 40, y + dy - 40, (uint16_t *) image_data_SolarIconSmall, 30, 30);
 }
