@@ -21,6 +21,9 @@
   */
   
 #include <M5EPD.h>
+#include "RTClib.h"
+#include <TimeLib.h>
+#include <HTTPClient.h>
 #include "Config.h"
 #include "ConfigOverride.h" // Remove this line
 #include "Data.h"

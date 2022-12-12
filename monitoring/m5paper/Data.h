@@ -24,7 +24,7 @@
 #include "Utils.h"
 #include <nvs.h>
 
-#define PPV_HISTORY_SIZE 700
+#define PPV_HISTORY_SIZE 725
 
 /**
   * BMV data.
@@ -141,8 +141,9 @@ public:
    MPPT         mppt;             //!< The MPPT data
    TasmotaElite tasmotaElite;     //!< The Tasmota Elite data
                                   
-   float        ppvHistory[PPV_HISTORY_SIZE]; //!< Solar panel power history.
-   float        ppvMax;
+   float        ppvHistoryValue[PPV_HISTORY_SIZE]; //!< Solar panel power history values.
+   DateTime     ppvHistoryDate[PPV_HISTORY_SIZE];  //!< dateTime of the history item.
+   float        ppvMax;                            //!< Max PPV
 
 public:
    MyData()
@@ -152,7 +153,8 @@ public:
       , sht30Temperatur(0)
       , sht30Humidity(0)
    {
-      memset(ppvHistory, 0, sizeof(ppvHistory));
+      memset(ppvHistoryValue, 0, sizeof(ppvHistoryValue));
+      memset(ppvHistoryDate,  0, sizeof(ppvHistoryDate));
       ppvMax = 0;
    }
 

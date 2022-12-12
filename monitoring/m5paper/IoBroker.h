@@ -20,9 +20,6 @@
   * Helper function to communicate with the IoBroker.
   */
 #pragma once
-#include "RTClib.h"
-#include <TimeLib.h>
-#include <HTTPClient.h>
 
 #define IOBROKER_QUERY     "/query/"
 #define IOBROKER_GET       "/get/"
@@ -42,7 +39,7 @@ protected:
    size_t readChars(String &string, size_t length);
    String readString(int len);
    void   parseContentLen(int &len, String line);
-   bool   parsPPVHistory(float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate);
+   bool   parsPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate);
    
 public:
    IoBroker();
@@ -50,7 +47,7 @@ public:
 
    bool getPlainValue(String &value,       String topic, String method = IOBROKER_GET_PLAIN, String param = "");
    bool getPlainValue(double &value,       String topic, String method = IOBROKER_GET_PLAIN, String param = "");
-   bool getPPVHistory(float ppvHistory[], float &ppvMax, String topic);
+   bool getPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String topic);
 };
 
 /* Constructor: Connect to the IoBroker server. */
@@ -213,7 +210,7 @@ bool IoBroker::getPlainValue(double &value, String topic, String method /*= IOBR
 }
 
 /* Reads the solar panel power over a specific time period. */
-bool IoBroker::getPPVHistory(float ppvHistory[], float &ppvMax, String topic)
+bool IoBroker::getPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String topic)
 {
    DateTime toDay    = GetRTCTime();
    DateTime toDate   = toDay  + TimeSpan( 1, 0, 0, 0);
@@ -222,14 +219,20 @@ bool IoBroker::getPPVHistory(float ppvHistory[], float &ppvMax, String topic)
    String   param = "?dateFrom=" + String(fromDate.year()) + "-" + String(fromDate.month()) + "-" + String(fromDate.day()) + 
                     "&dateTo="   + String(toDate.year())   + "-" + String(toDate.month())   + "-" + String(toDate.day());
 
+   int fromUnixTime = fromDate.unixtime();                    
+   int toUnixTime   = toDate.unixtime();                    
+   for (int i = 0; i < PPV_HISTORY_SIZE; i++) {
+      ppvHistoryDate[i] = DateTime((int) ((float) fromUnixTime + i * (float) (toUnixTime - fromUnixTime) / (float) PPV_HISTORY_SIZE));
+   }
+
    if (getPlainValue(plainString, topic, IOBROKER_QUERY, param)) {
-      return parsPPVHistory(ppvHistory, ppvMax, plainString, fromDate, toDate);
+      return parsPPVHistory(ppvHistoryDate, ppvHistory, ppvMax, plainString, fromDate, toDate);
    }
    return false;
 }
 
 /* Pars the history json data, analyse it and put the result into the ppvHistoryArray. */
-bool IoBroker::parsPPVHistory(float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate)
+bool IoBroker::parsPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate)
 {
    int historyCount[PPV_HISTORY_SIZE];
    int index = historyData.indexOf('[');
@@ -259,7 +262,7 @@ bool IoBroker::parsPPVHistory(float ppvHistory[], float &ppvMax, String historyD
                } else {
                   Serial.println("Wrong history index! [" + String(historyIndex) + ']');
                }
-               Serial.printf("**** Index: %d Value: %s/%f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.c_str(), value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
+               // Serial.printf("**** Index: %d Value: %.0f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
             }
          }
       }
@@ -307,5 +310,5 @@ void GetIoBrokerValues(MyData &myData)
    ioBroker.getPlainValue(myData.mppt.mainVoltage,               "mqtt.0.mppt.V");
    ioBroker.getPlainValue(myData.mppt.panelVoltage,              "mqtt.0.mppt.VPV");
 
-   ioBroker.getPPVHistory(myData.ppvHistory, myData.ppvMax, "mqtt.0.mppt.PPV");
+   ioBroker.getPPVHistory(myData.ppvHistoryDate, myData.ppvHistoryValue, myData.ppvMax, "mqtt.0.mppt.PPV");
 }
