@@ -125,7 +125,7 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String unitX, int xMi
       
       if (oldDay != day && date.hour() >= 12) {
          oldDay = day;
-         canvas.drawString(day, graphX - 3 + i * xStep, graphY + graphDY + 5);   
+         canvas.drawCentreString(day, graphX - 3 + i * xStep, graphY + graphDY + 5, 1);
       }
    }
    
