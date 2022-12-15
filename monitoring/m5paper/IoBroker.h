@@ -25,51 +25,55 @@
 #define IOBROKER_GET       "/get/"
 #define IOBROKER_GET_PLAIN "/getPlainValue/"
 
+class IoBrokerWifiClient; //!< Wifi connection class
+class IoBrokerBase;       //!< Base class for IoBroker communication
+class IoBrokerPlain;      //!< Plain value (double) request
+class IoBrokerPPVHistory; //!< PPV History request
 
-/* Helper class for getting data from IoBroker. */
-class IoBroker
+
+/* ***************************************************************************** */
+/* *** class IoBrokerWifiClient ************************************************ */
+/* ***************************************************************************** */
+
+/**
+  * Helper class for the IoBroker connection.
+  */
+class IoBrokerWifiClient
 {
 public:
-   WiFiClient client;
+   WiFiClient client_; //!< wifi client
 
-protected:
-   bool   connect();
-   void   waitForAvailable();
-   int    timedRead();
-   size_t readChars(String &string, size_t length);
-   String readString(int len);
-   void   parseContentLen(int &len, String line);
-   bool   parsPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate);
+public:
+   bool connect();
+   void disconnect();
+   bool connected(bool reconnect = true);
+   void waitForAvailable();
    
 public:
-   IoBroker();
-   ~IoBroker();
-
-   bool getPlainValue(String &value,       String topic, String method = IOBROKER_GET_PLAIN, String param = "");
-   bool getPlainValue(double &value,       String topic, String method = IOBROKER_GET_PLAIN, String param = "");
-   bool getPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String topic);
+   IoBrokerWifiClient();
+   ~IoBrokerWifiClient();
 };
 
 /* Constructor: Connect to the IoBroker server. */
-IoBroker::IoBroker()
+IoBrokerWifiClient::IoBrokerWifiClient()
 {
    connect();
 }
 
 /* Destructor: Disconnect. */
-IoBroker::~IoBroker()
+IoBrokerWifiClient::~IoBrokerWifiClient()
 {
-   if (client.connected()) {
-      client.stop();
+   if (client_.connected()) {
+      client_.stop();
    }
 }
 
 /* Connect to the specific IoBroker server. */
-bool IoBroker::connect()
+bool IoBrokerWifiClient::connect()
 {
    Serial.println();
    Serial.println("ty to connect!");
-   if (!client.connect(IOBROKER_URL, IOBROKER_PORT)) {
+   if (!client_.connect(IOBROKER_URL, IOBROKER_PORT)) {
       Serial.println("connection failed!");
    } else {
       Serial.println("connected!");
@@ -77,238 +81,322 @@ bool IoBroker::connect()
    }
 }
 
+/* Disconnect the IoBroker server. */
+void IoBrokerWifiClient::disconnect()
+{
+   if (client_.connected()) {
+      client_.stop();
+   }
+}
+
+/* Are we connected, reconnect if needed.. */
+bool IoBrokerWifiClient::connected(bool reconnect /*= true*/)
+{
+   if (reconnect) {
+      if (!client_.connected()) {
+         connect();
+      }
+   }
+   return client_.connected();
+}
+
 /* Wait until the server is available. */
-void IoBroker::waitForAvailable()
+void IoBrokerWifiClient::waitForAvailable()
 {
    unsigned long _startMillis = millis();
-   unsigned long _timeout     = client.getTimeout();
+   unsigned long _timeout     = client_.getTimeout();
 
-   while (!client.available()) {
+   while (!client_.available()) {
       if (millis() - _startMillis > _timeout) {
          Serial.println("timeout!");          
-         client.stop(); 
+         client_.stop(); 
          break;
       }
    }
 }
 
-/* Read one item.. */
-int IoBroker::timedRead()
+/* ***************************************************************************** */
+/* *** class IoBrokerBase ****************************************************** */
+/* ***************************************************************************** */
+
+/**
+  * Base class for IoBroker communication.
+  */
+class IoBrokerBase
 {
-   int c;
-   unsigned long _startMillis = millis();
-   unsigned long _timeout     = client.getTimeout();
+protected:
+   IoBrokerWifiClient &wifiClient_; //!< Reference to the IoBroker wifiClient
+
+protected:
+   virtual void onRequest ()       = 0;
+   virtual void onChar    (char c) = 0;
    
-   do {
-      c = client.read();
-      //delay(5);
-      if (c >= 0) return c;
-   } while(millis() - _startMillis < _timeout);
-   return -1;     // -1 indicates timeout
-} 
-
-/* Read a string. */
-size_t IoBroker::readChars(String &string, size_t length)
-{
-   size_t count = 0;
-
-   //Serial.println("len: " + String(length)); 
-   while (count < length) {
-      int c = timedRead();
-      if (c < 0) {
-         Serial.println("break!");
-         break;
-      }
-      string += (char) c;
-      count++;
+public:
+   IoBrokerBase(IoBrokerWifiClient &ioBrokerWifiClient)
+      : wifiClient_(ioBrokerWifiClient)
+   {
    }
-   //Serial.println("data: <" + string + ">"); 
-   if (client.available()) {
-      String rest = client.readString();
-      //Serial.println("rest: " + String(rest));
-   }
-   return count;
-} 
 
-/* Read a string. */
-String IoBroker::readString(int len)
-{
-   String ret;
-   
-   if (len > 0) {
-      readChars(ret, len);
-   } else {
-      ret = client.readString();
-   }
-   return ret;
-}
-
-/* Read the Content-Length header. */
-void IoBroker::parseContentLen(int &len, String line)
-{
-   String lenString = "Content-Length:";
-   int    index     = line.indexOf(lenString);
-   
-   if (index != -1) {
-      len = atoi(line.substring(index + lenString.length()).c_str());
-   }
-}
+   bool sendRequest(String method, String topic, String param = "");
+};
 
 /* Read a String from IoBroker. */
-bool IoBroker::getPlainValue(String &string, String topic, String method /*= IOBROKER_GET_PLAIN*/, String param /*= ""*/) 
+bool IoBrokerBase::sendRequest(String method, String topic, String param) 
 {
    bool ret = false;
 
-   Serial.println("getPlainValue()...");
-   if (!client.connected()) {
-      connect();
-   }
-   if (client.connected()) {
-      int    len = 0;
+   Serial.println("sendRequest()...");
+   if (wifiClient_.connected()) {
       String url = method + topic + param;
             
       // This will send the request to the server
+      onRequest();
       Serial.println("Send request! " + url);
-      client.print((String) "GET " + url + " HTTP/1.1\r\n\r\n");
-      client.flush();
+      wifiClient_.client_.print("GET " + url + " HTTP/1.1\r\nConnection: keep-alive\r\n\r\n");      
+      wifiClient_.client_.flush();
 
-      waitForAvailable();
-      while (client.available()) {
-         String line = client.readStringUntil('\n');
-
-         parseContentLen(len, line);
-         if (line == "\r") {
-            break;
-         }
+      wifiClient_.waitForAvailable();
+      // Read http response head
+      while (wifiClient_.client_.available()) {
+         String line = wifiClient_.client_.readStringUntil('\n');
+         if (line == "\r") break;
       }    
-      while (client.available()) {
-         //Serial.println(len);
-         string += readString(len);
-         //Serial.println("read...");
+      
+      // Read http response body
+      while (wifiClient_.client_.available()) {
+         onChar((char) wifiClient_.client_.read());
          ret = true;
-      }    
-      client.flush();
-      if (string.length() < 100) {
-         Serial.println("Plain value: " + string);
-      } else {
-         Serial.println("Plain value: " + string.substring(0, 100) + "...");
       }
+      wifiClient_.client_.flush();
+      Serial.println("end of sendRequest");
    }
    return ret;
 }
 
-/* Read a plain value. */
-bool IoBroker::getPlainValue(double &value, String topic, String method /*= IOBROKER_GET_PLAIN*/, String param /*= ""*/) 
-{
-   String plainString;
+/* ***************************************************************************** */
+/* *** class IoBrokerPlain ***************************************************** */
+/* ***************************************************************************** */
 
-   if (getPlainValue(plainString, topic, method)) {
-      value = plainString.toDouble();
+/**
+  * IoBroker plain value (double) request.
+  */
+class IoBrokerPlain : public IoBrokerBase
+{
+protected:
+   String plainString_; //!< Holds the incoming wifi data
+
+protected:
+   virtual void onRequest ();
+   virtual void onChar    (char c);
+   
+public:
+   IoBrokerPlain(IoBrokerWifiClient &wifiClient)
+      : IoBrokerBase(wifiClient)
+   {
+   }
+
+   bool getPlainValue(String value,  String topic);
+   bool getPlainValue(double &value, String topic);
+};
+
+/* The request was started. */
+void IoBrokerPlain::onRequest()
+{
+   plainString_ = "";
+}
+
+/* one char comes in. */
+void IoBrokerPlain::onChar(char c)
+{
+   plainString_ += c;
+}
+
+/* The incoming data are complete. */
+bool IoBrokerPlain::getPlainValue(String value, String topic)
+{
+   if (sendRequest(IOBROKER_GET_PLAIN, topic)) {
+      value = plainString_;
+      Serial.println("plainValue: " + value);
       return true;
    }
    return false;
 }
 
-/* Reads the solar panel power over a specific time period. */
-bool IoBroker::getPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String topic)
+/* Convert the string request to double. */
+bool IoBrokerPlain::getPlainValue(double &value, String topic)
 {
-   DateTime toDay    = GetRTCTime();
-   DateTime toDate   = toDay  + TimeSpan( 1, 0, 0, 0);
-   DateTime fromDate = toDate - TimeSpan(30, 0, 0, 0);
-   String   plainString;
-   String   param = "?dateFrom=" + String(fromDate.year()) + "-" + String(fromDate.month()) + "-" + String(fromDate.day()) + 
-                    "&dateTo="   + String(toDate.year())   + "-" + String(toDate.month())   + "-" + String(toDate.day());
-
-   int fromUnixTime = fromDate.unixtime();                    
-   int toUnixTime   = toDate.unixtime();                    
-   for (int i = 0; i < PPV_HISTORY_SIZE; i++) {
-      ppvHistoryDate[i] = DateTime((int) ((float) fromUnixTime + i * (float) (toUnixTime - fromUnixTime) / (float) PPV_HISTORY_SIZE));
-   }
-
-   if (getPlainValue(plainString, topic, IOBROKER_QUERY, param)) {
-      return parsPPVHistory(ppvHistoryDate, ppvHistory, ppvMax, plainString, fromDate, toDate);
+   if (sendRequest(IOBROKER_GET_PLAIN, topic)) {
+      value = plainString_.toDouble();
+      Serial.println("plainValue: " + String(value));
+      return true;
    }
    return false;
 }
 
-/* Pars the history json data, analyse it and put the result into the ppvHistoryArray. */
-bool IoBroker::parsPPVHistory(DateTime ppvHistoryDate[], float ppvHistory[], float &ppvMax, String historyData, DateTime fromDate, DateTime toDate)
-{
-   int historyCount[PPV_HISTORY_SIZE];
-   int index = historyData.indexOf('[');
+/* ***************************************************************************** */
+/* *** class IoBrokerPPVHistory ************************************************ */
+/* ***************************************************************************** */
 
-   ppvMax = 0.0;
-   memset(ppvHistory,   0, sizeof(ppvHistory));
-   memset(historyCount, 0, sizeof(historyCount));
-  
-   while (index >= 0) {
-      if (isDigit(historyData[index + 1])) {
-         int sep = historyData.indexOf(',', index + 1);
+/**
+  * IoBroker PPV History request.
+  */
+class IoBrokerPPVHistory : public IoBrokerBase
+{
+protected:
+   DateTime *historyDate_;                    //!< The history dates of the last 4 weeks
+   float    *historyValue_;                   //!< The values for these dates.
+   float    &maxValue_;                       //!< The maximum value
+   int       historyCount_[PPV_HISTORY_SIZE]; //!< How many date comes in per date.
+   DateTime  fromDate_;                       //!< Start date for the request (4 weeks earlier)
+   DateTime  toDate_;                         //!< End date, tomorrow
+
+   String   valueString_;                     //!< Incommig data  
+   bool     valueStart_;                      //!< One incomming data '[xxx, xxx]' has startet
+
+protected:
+   virtual void onRequest ();
+   virtual void onChar    (char c);
+
+   void parsValue(String valueString);
+   
+public:
+   IoBrokerPPVHistory(IoBrokerWifiClient &wifiClient, DateTime historyDate[], float historyValue[], float &maxValue)
+      : IoBrokerBase(wifiClient)
+      , historyDate_(historyDate)
+      , historyValue_(historyValue)
+      , maxValue_(maxValue)
+      , valueStart_(false)
+   {
+      memset(historyCount_, 0, sizeof(historyCount_));
+   }
+
+   bool getHistoryValues(String topic);
+};
+
+/* The request has started. */
+void IoBrokerPPVHistory::onRequest()
+{
+   valueString_ = "";
+}
+
+/* Add every char to the valueString and start parsing at the end of one data item. */
+void IoBrokerPPVHistory::onChar(char c)
+{
+   if (c == '[') {
+      valueStart_  = true;
+      valueString_ = "";
+   } else if (c == ']') {
+      valueStart_ = false;
+      // Serial.println("valueString: " + valueString_);
+      parsValue(valueString_);
+      valueString_ = "";
+   } else {
+      valueString_ += c;
+   }
+}
+
+/* Pars one history data string. 'value, timestamp' */
+void IoBrokerPPVHistory::parsValue(String valueString)
+{
+   if  (valueString.length() >= 0) {
+      if (isDigit(valueString[0])) {
+         int sep = valueString.indexOf(',');
 
          if (sep >= 0) {
-            int end = historyData.indexOf(']', sep + 1);
+            String value     = valueString.substring(0, sep);
+            String timestamp = valueString.substring(sep + 1, valueString.length() - 3); // no milliseconds
 
-            if (end >= 0) {
-               String value     = historyData.substring(index + 1, sep);
-               String timestamp = historyData.substring(sep + 1,   end - 3); // no milliseconds
+            DateTime jsonDate(timestamp.toInt());
 
-               DateTime jsonDate(timestamp.toInt());
+            int historyIndex = (double) PPV_HISTORY_SIZE / (double) (toDate_.secondstime() - fromDate_.secondstime()) * (double) (jsonDate.secondstime() - fromDate_.secondstime());
 
-               int historyIndex = (double) PPV_HISTORY_SIZE / (double) (toDate.secondstime() - fromDate.secondstime()) * (double) (jsonDate.secondstime() - fromDate.secondstime());
+            if (historyIndex >= 0 && historyIndex < PPV_HISTORY_SIZE) {
+               historyValue_[historyIndex] += value.toFloat();
+               historyCount_[historyIndex]++;
+            } else {
+               Serial.println("Wrong history index! [" + String(historyIndex) + ']');
+            }
+            // Serial.printf("**** Index: %d Value: %.0f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
+         }
+      }
+   }
+}
 
-               if (historyIndex >= 0 && historyIndex < PPV_HISTORY_SIZE) {
-                  ppvHistory[historyIndex] += value.toFloat();
-                  historyCount[historyIndex]++;
-               } else {
-                  Serial.println("Wrong history index! [" + String(historyIndex) + ']');
-               }
-               // Serial.printf("**** Index: %d Value: %.0f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
+/* Read all the history data of one mqtt type. */
+bool IoBrokerPPVHistory::getHistoryValues(String topic)
+{
+   String   param;
+   DateTime toDay = GetRTCTime();
+
+   maxValue_ = 0.0;
+   memset(historyValue_, 0, PPV_HISTORY_SIZE * sizeof(float));
+   memset(historyCount_, 0, sizeof(historyCount_));
+
+   // Calculate the from and to dates (4 weeks ago and tomorrow) and format these as a query param.
+   toDate_   = toDay   + TimeSpan( 1, 0, 0, 0);
+   fromDate_ = toDate_ - TimeSpan(30, 0, 0, 0);
+   param     = "?dateFrom=" + String(fromDate_.year()) + "-" + String(fromDate_.month()) + "-" + String(fromDate_.day()) + 
+               "&dateTo="   + String(toDate_.year())   + "-" + String(toDate_.month())   + "-" + String(toDate_.day());
+
+   // Initialize the right time to the array positions.
+   int fromUnixTime = fromDate_.unixtime();                    
+   int toUnixTime   = toDate_.unixtime();                    
+   for (int i = 0; i < PPV_HISTORY_SIZE; i++) {
+      historyDate_[i] = DateTime((int) ((float) fromUnixTime + i * (float) (toUnixTime - fromUnixTime) / (float) PPV_HISTORY_SIZE));
+   }
+
+   // Send request, pars on every date item internaly
+   if (sendRequest(IOBROKER_QUERY, topic, param)) {
+      // average on every data
+      for (int i = 0; i < PPV_HISTORY_SIZE; i++) {
+         if (historyCount_[i] > 0) {
+            historyValue_[i] = historyValue_[i] / historyCount_[i];
+            if (maxValue_ < historyValue_[i]) {
+               maxValue_ = historyValue_[i];
             }
          }
       }
-      index = historyData.indexOf('[', index + 1);
+      return true;
    }
-   for (int i = 0; i < PPV_HISTORY_SIZE; i++) {
-      if (historyCount[i] > 0) {
-         ppvHistory[i] = ppvHistory[i] / historyCount[i];
-         if (ppvMax < ppvHistory[i]) {
-            ppvMax = ppvHistory[i];
-         }
-      }
-   }
-
-   return true;
+   
+   return false;
 }
+
+/* ***************************************************************************** */
+/* *** GetIoBrokerValues() ***************************************************** */
+/* ***************************************************************************** */
 
 /* Helper Funktion to read all the IoBroker data into the data object. */
 void GetIoBrokerValues(MyData &myData)
 {
-   IoBroker ioBroker;
+   IoBrokerWifiClient ioBrokerWifiClient;
+   IoBrokerPlain      ioBrokerPlain(ioBrokerWifiClient);
+   IoBrokerPPVHistory ioBrokerPPVHistory(ioBrokerWifiClient, myData.ppvHistoryDate, myData.ppvHistoryValue, myData.ppvMax);
 
-   ioBroker.getPlainValue(myData.bmv.consumedAmpHours,           "mqtt.0.bmv.CE");
-   ioBroker.getPlainValue(myData.bmv.stateOfCharge,              "mqtt.0.bmv.SOC");
-   ioBroker.getPlainValue(myData.bmv.midPointDeviation,          "mqtt.0.bmv.DM");
-   ioBroker.getPlainValue(myData.bmv.numberOfChargeCycles,       "mqtt.0.bmv.H4");
-   ioBroker.getPlainValue(myData.bmv.dischargedEnergy,           "mqtt.0.bmv.H17");
-   ioBroker.getPlainValue(myData.bmv.chargedEnergy,              "mqtt.0.bmv.H18");
-   ioBroker.getPlainValue(myData.bmv.cumulativeAmpHoursDrawn,    "mqtt.0.bmv.H6");
-   ioBroker.getPlainValue(myData.bmv.secondsSinceLastFullCharge, "mqtt.0.bmv.H9");
-   ioBroker.getPlainValue(myData.bmv.batteryCurrent,             "mqtt.0.bmv.I");
-   ioBroker.getPlainValue(myData.bmv.instantaneousPower,         "mqtt.0.bmv.P");
-   ioBroker.getPlainValue(myData.bmv.relay,                      "mqtt.0.bmv.Relay");
-   ioBroker.getPlainValue(myData.bmv.timeToGo,                   "mqtt.0.bmv.TTG");
-   ioBroker.getPlainValue(myData.bmv.mainVoltage,                "mqtt.0.bmv.V");
+   ioBrokerPlain.getPlainValue(myData.bmv.consumedAmpHours,           "mqtt.0.bmv.CE");
+   ioBrokerPlain.getPlainValue(myData.bmv.stateOfCharge,              "mqtt.0.bmv.SOC");
+   ioBrokerPlain.getPlainValue(myData.bmv.midPointDeviation,          "mqtt.0.bmv.DM");
+   ioBrokerPlain.getPlainValue(myData.bmv.numberOfChargeCycles,       "mqtt.0.bmv.H4");
+   ioBrokerPlain.getPlainValue(myData.bmv.dischargedEnergy,           "mqtt.0.bmv.H17");
+   ioBrokerPlain.getPlainValue(myData.bmv.chargedEnergy,              "mqtt.0.bmv.H18");
+   ioBrokerPlain.getPlainValue(myData.bmv.cumulativeAmpHoursDrawn,    "mqtt.0.bmv.H6");
+   ioBrokerPlain.getPlainValue(myData.bmv.secondsSinceLastFullCharge, "mqtt.0.bmv.H9");
+   ioBrokerPlain.getPlainValue(myData.bmv.batteryCurrent,             "mqtt.0.bmv.I");
+   ioBrokerPlain.getPlainValue(myData.bmv.instantaneousPower,         "mqtt.0.bmv.P");
+   ioBrokerPlain.getPlainValue(myData.bmv.relay,                      "mqtt.0.bmv.Relay");
+   ioBrokerPlain.getPlainValue(myData.bmv.timeToGo,                   "mqtt.0.bmv.TTG");
+   ioBrokerPlain.getPlainValue(myData.bmv.mainVoltage,                "mqtt.0.bmv.V");
 
-   ioBroker.getPlainValue(myData.mppt.stateOfOperation,          "mqtt.0.mppt.CS");
-   ioBroker.getPlainValue(myData.mppt.yieldTotal,                "mqtt.0.mppt.H19");
-   ioBroker.getPlainValue(myData.mppt.yieldToday,                "mqtt.0.mppt.H20");
-   ioBroker.getPlainValue(myData.mppt.maximumPowerToday,         "mqtt.0.mppt.H21");
-   ioBroker.getPlainValue(myData.mppt.yieldYesterday,            "mqtt.0.mppt.H22");
-   ioBroker.getPlainValue(myData.mppt.maximumPowerYesterday,     "mqtt.0.mppt.H23");
-   ioBroker.getPlainValue(myData.mppt.batteryCurrent,            "mqtt.0.mppt.I");
-   ioBroker.getPlainValue(myData.mppt.panelPower,                "mqtt.0.mppt.PPV");
-   ioBroker.getPlainValue(myData.mppt.mainVoltage,               "mqtt.0.mppt.V");
-   ioBroker.getPlainValue(myData.mppt.panelVoltage,              "mqtt.0.mppt.VPV");
+   ioBrokerPlain.getPlainValue(myData.mppt.stateOfOperation,          "mqtt.0.mppt.CS");
+   ioBrokerPlain.getPlainValue(myData.mppt.yieldTotal,                "mqtt.0.mppt.H19");
+   ioBrokerPlain.getPlainValue(myData.mppt.yieldToday,                "mqtt.0.mppt.H20");
+   ioBrokerPlain.getPlainValue(myData.mppt.maximumPowerToday,         "mqtt.0.mppt.H21");
+   ioBrokerPlain.getPlainValue(myData.mppt.yieldYesterday,            "mqtt.0.mppt.H22");
+   ioBrokerPlain.getPlainValue(myData.mppt.maximumPowerYesterday,     "mqtt.0.mppt.H23");
+   ioBrokerPlain.getPlainValue(myData.mppt.batteryCurrent,            "mqtt.0.mppt.I");
+   ioBrokerPlain.getPlainValue(myData.mppt.panelPower,                "mqtt.0.mppt.PPV");
+   ioBrokerPlain.getPlainValue(myData.mppt.mainVoltage,               "mqtt.0.mppt.V");
+   ioBrokerPlain.getPlainValue(myData.mppt.panelVoltage,              "mqtt.0.mppt.VPV");
 
-   ioBroker.getPPVHistory(myData.ppvHistoryDate, myData.ppvHistoryValue, myData.ppvMax, "mqtt.0.mppt.PPV");
+   ioBrokerPPVHistory.getHistoryValues("mqtt.0.mppt.PPV");
 }
