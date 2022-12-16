@@ -9,3 +9,7 @@
    Arduino  
    M5Paper  
    IoBroker settings
+      History on mppt.PPV 
+      store only changes
+      minimum difference 5
+   

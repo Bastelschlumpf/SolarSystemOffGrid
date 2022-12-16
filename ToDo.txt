@@ -2,11 +2,11 @@
 - Bild Solarpanels ersetzen wenn MeyerBurger montiert.
 ok - Bilder der Victron Module 
 ok - Victron Einstellungen für Power Queen Batterien
-- Victron MQQT
-  Schaltung
-  Gelötet
-  gehäuse
+ok - Victron MQQT (Schaltung, Gelötet, Gehäuse)
+ok - E-Ink M5paper
+ok - Keywords
 
-- E-Ink M5paper
-
-- Keywords
+Monitor
+- BMV-Alarm auswerten und anzeigen (AR, Alarm)
+- Evtl einen progress beim lesen der daten anzeigen.
+- Beschreibung der Monitoranzeige
