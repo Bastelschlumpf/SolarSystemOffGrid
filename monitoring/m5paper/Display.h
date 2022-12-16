@@ -111,39 +111,45 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String unitX, int xMi
    int    graphY     = y + 25;
    int    graphDX    = dx - textWidth - 20;
    int    graphDY    = dy - 25 - 20;
-   float  xStep      = (float) graphDX / (float) (xMax - xMin);
-   float  yStep      = (float) graphDY / (float) (yMax - yMin);
 
    canvas.setTextSize(1);
    canvas.drawString(yMaxString, x + 5, graphY - 5);   
    canvas.drawString(yMinString, x + 5, graphY + graphDY - 3);   
 
-   String oldDay;
-   for (int i = xMin; i < (xMax - xMin); i++) {
-      DateTime date = dates[i - xMin];
-      String   day = String(date.day());
+   if (xMax - xMin > 0) {
+      String oldDay;
+      float  xStep = (float) graphDX / (float) (xMax - xMin);
       
-      if (oldDay != day && date.hour() >= 12) {
-         oldDay = day;
-         canvas.drawCentreString(day, graphX - 3 + i * xStep, graphY + graphDY + 5, 1);
+      for (int i = xMin; i < (xMax - xMin); i++) {
+         DateTime date = dates[i - xMin];
+         String   day = String(date.day());
+         
+         if (oldDay != day && date.hour() >= 12) {
+            oldDay = day;
+            canvas.drawCentreString(day, graphX - 3 + i * xStep, graphY + graphDY + 5, 1);
+         }
       }
    }
-   
+
    canvas.drawRect(graphX, graphY, graphDX, graphDY, M5EPD_Canvas::G15);   
+
+   if (yMax - yMin > 0) {
+      float yStep = (float) graphDY / (float) (yMax - yMin);
+      
+      for (int i = xMin; i < xMax; i++) {
+         float yValue   = values[i - xMin];
+         float yValueDY = (float) graphDY / (float) (yMax - yMin);
+         float xPos     = (float) graphX + graphDX / (float) (xMax - xMin) * i;
+         float yPos     = (float) graphY + graphDY - (float) (yValue - yMin) * yValueDY;
    
-   for (int i = xMin; i < xMax; i++) {
-      float yValue   = values[i - xMin];
-      float yValueDY = (float) graphDY / (float) (yMax - yMin);
-      float xPos     = (float) graphX + graphDX / (float) (xMax - xMin) * i;
-      float yPos     = (float) graphY + graphDY - (float) (yValue - yMin) * yValueDY;
-
-      if (yPos > graphY + graphDY) yPos = graphY + graphDY;
-      if (yPos < graphY)           yPos = graphY;
-
-//      canvas.fillCircle(xPos, yPos, 2, M5EPD_Canvas::G15);
-      if (i > xMin) {
-         canvas.drawLine(xPos, graphY + graphDY, xPos, yPos, M5EPD_Canvas::G15);         
-         // Serial.printf("GraphLine: %d %f %d, %d\n", i, yValue, (int) xPos, (int) yPos);
+         if (yPos > graphY + graphDY) yPos = graphY + graphDY;
+         if (yPos < graphY)           yPos = graphY;
+   
+         // canvas.fillCircle(xPos, yPos, 2, M5EPD_Canvas::G15);
+         if (i > xMin) {
+            canvas.drawLine(xPos, graphY + graphDY, xPos, yPos, M5EPD_Canvas::G15);         
+            Serial.printf("GraphLine: %d %f %d, %d\n", i, yValue, (int) xPos, (int) yPos);
+         }
       }
    }
 }
