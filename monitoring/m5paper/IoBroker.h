@@ -71,12 +71,11 @@ IoBrokerWifiClient::~IoBrokerWifiClient()
 /* Connect to the specific IoBroker server. */
 bool IoBrokerWifiClient::connect()
 {
-   Serial.println();
-   Serial.println("ty to connect!");
+   Serial.print("try to connect to IoBroker!");
    if (!client_.connect(IOBROKER_URL, IOBROKER_PORT)) {
-      Serial.println("connection failed!");
+      Serial.println(" -> connection failed!");
    } else {
-      Serial.println("connected!");
+      Serial.println(" -> connected!");
       delay(100);
    }
 }
@@ -145,13 +144,13 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
 {
    bool ret = false;
 
-   Serial.println("sendRequest()...");
+   Serial.print("sendRequest! ");
    if (wifiClient_.connected()) {
       String url = method + topic + param;
             
       // This will send the request to the server
       onRequest();
-      Serial.println("Send request! " + url);
+      Serial.print(url);
       wifiClient_.client_.print("GET " + url + " HTTP/1.1\r\nConnection: keep-alive\r\n\r\n");      
       wifiClient_.client_.flush();
 
@@ -168,7 +167,7 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
          ret = true;
       }
       wifiClient_.client_.flush();
-      Serial.println("end of sendRequest");
+      Serial.println(" -> ok");
    }
    return ret;
 }
