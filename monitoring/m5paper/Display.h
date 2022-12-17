@@ -148,7 +148,7 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String unitX, int xMi
          // canvas.fillCircle(xPos, yPos, 2, M5EPD_Canvas::G15);
          if (i > xMin) {
             canvas.drawLine(xPos, graphY + graphDY, xPos, yPos, M5EPD_Canvas::G15);         
-            Serial.printf("GraphLine: %d %f %d, %d\n", i, yValue, (int) xPos, (int) yPos);
+            // Serial.printf("GraphLine: %d %f %d, %d\n", i, yValue, (int) xPos, (int) yPos);
          }
       }
    }
@@ -234,26 +234,37 @@ void SolarDisplay::DrawHeadBattery(int x, int y)
 /* Draw all the information about the battery status. */
 void SolarDisplay::DrawBatteryInfo(int x, int y, int dx, int dy)
 {
-   String mainVoltageInfo                = FormatString("%.2f V     ",  myData.bmv.mainVoltage / 1000,                 13);
-   String batteryCurrenInfot             = FormatString("%.2f A     ",  myData.bmv.batteryCurrent / 1000,              13);
-   String midPointDeviationInfo          = FormatString("%.2f %%MP  ", myData.bmv.midPointDeviation / 10,              12);
-   String stateOfOperationInfo           = FormatString(StateOfOperation(myData.mppt.stateOfOperation), 0,              7);
-   String numberOfChargeCyclesInfo       = FormatString("%.0f Cycles",  myData.bmv.numberOfChargeCycles,               10);
-   String secondsSinceLastFullChargeInfo = FormatString("%.0f Days  ",  myData.bmv.secondsSinceLastFullCharge / 86400, 10);
-   String chargedEnergyInfo              = FormatString("+%.1f kWh",    myData.bmv.chargedEnergy / 100,                 5);
-   String dischargedEnergyInfo           = FormatString("-%.1f kWh",    myData.bmv.dischargedEnergy / 100,              5);
+   DateTime toDay                          = GetRTCTime();
+   TimeSpan timeSpan                       = toDay - myData.bmv.lastChange;
+   String   mainVoltageInfo                = FormatString("%.2f V     ",  myData.bmv.mainVoltage / 1000,                 13);
+   String   batteryCurrenInfot             = FormatString("%.2f A     ",  myData.bmv.batteryCurrent / 1000,              13);
+   String   midPointDeviationInfo          = FormatString("%.2f %%MP  ", myData.bmv.midPointDeviation / 10,              12);
+   String   stateOfOperationInfo           = FormatString(StateOfOperation(myData.mppt.stateOfOperation), 0,              7);
+   String   numberOfChargeCyclesInfo       = FormatString("%.0f Cycles",  myData.bmv.numberOfChargeCycles,               10);
+   String   secondsSinceLastFullChargeInfo = FormatString("%.0f Days  ",  myData.bmv.secondsSinceLastFullCharge / 86400, 10);
+   String   chargedEnergyInfo              = FormatString("+%.1f kWh",    myData.bmv.chargedEnergy / 100,                 5);
+   String   dischargedEnergyInfo           = FormatString("-%.1f kWh",    myData.bmv.dischargedEnergy / 100,              5);
 
    canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
 
-   canvas.drawString(mainVoltageInfo,                x +   2, y +  14);
-   canvas.drawString(batteryCurrenInfot,             x +   2, y +  34);
-   canvas.drawString(midPointDeviationInfo,          x +   2, y +  54);
-   canvas.drawString(numberOfChargeCyclesInfo,       x +   2, y +  84);
-   canvas.drawString(secondsSinceLastFullChargeInfo, x +   2, y + 104);
-   canvas.drawString(stateOfOperationInfo,           x +   2, y + 134);
-
-   canvas.drawString(chargedEnergyInfo,              x + 130, y +  14);
-   canvas.drawString(dischargedEnergyInfo,           x + 130, y +  34);
+   if (myData.bmv.lastChange == EmptyDateTime) {
+      canvas.setTextSize(3);
+      canvas.drawString("no data", x + 45, y + 70);
+   } else if (timeSpan.totalseconds() < 60 * 60) {
+      canvas.setTextSize(3);
+      canvas.drawString("no update", x + 45, y + 70);
+   } else {
+      canvas.drawString(mainVoltageInfo,                x +   2, y +  14);
+      canvas.drawString(batteryCurrenInfot,             x +   2, y +  34);
+      canvas.drawString(midPointDeviationInfo,          x +   2, y +  54);
+      canvas.drawString(numberOfChargeCyclesInfo,       x +   2, y +  84);
+      canvas.drawString(secondsSinceLastFullChargeInfo, x +   2, y + 104);
+      canvas.drawString(stateOfOperationInfo,           x +   2, y + 134);
+   
+      canvas.drawString(chargedEnergyInfo,              x + 130, y +  14);
+      canvas.drawString(dischargedEnergyInfo,           x + 130, y +  34);
+   }
+   canvas.setTextSize(2);
 
    DrawIcon(x + dx - 23, y + dy - 34, (uint16_t *) image_data_BatteryIconSmall, 13, 24);
 }
@@ -281,15 +292,27 @@ void SolarDisplay::DrawSolarArrow(int x, int y, int dx, int dy)
 /* Draw all the Grid information. */
 void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
 {
-   String powerInfo   = FormatString("%.0f W", myData.tasmotaElite.power,   5);
-   String voltageInfo = FormatString("%.2f V", myData.tasmotaElite.voltage, 8);
-   String ampereInfo  = FormatString("%.2f A", myData.tasmotaElite.ampere,  8);
+   DateTime toDay       = GetRTCTime();
+   TimeSpan timeSpan    = toDay - myData.tasmotaElite.lastChange;
+   String   voltageInfo = FormatString("%.2f V", myData.tasmotaElite.voltage, 8);
+   String   ampereInfo  = FormatString("%.2f A", myData.tasmotaElite.ampere,  8);
 
    canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
 
-   canvas.drawString(powerInfo,   x + 14, y + 14);
-   canvas.drawString(voltageInfo, x + 14, y + 44);
-   canvas.drawString(ampereInfo,  x + 14, y + 64);
+   if (myData.tasmotaElite.lastChange == EmptyDateTime) {
+      canvas.setTextSize(3);
+      canvas.drawString("no data", x + 100, y + 70);
+   } else if (timeSpan.totalseconds() < 60 * 60) {
+      canvas.setTextSize(3);
+      canvas.drawString("no update", x + 100, y + 70);
+   } else {
+      canvas.drawString(voltageInfo, x + 14, y + 14);
+      canvas.drawString(ampereInfo,  x + 14, y + 44);
+
+      DrawGraph(x + 120, y - 5, GRID_HISTORY_SIZE, dy, "", 0, GRID_HISTORY_SIZE, "W", 0, 
+                myData.gridMax, myData.gridHistoryDate, myData.gridHistoryValue);
+   }
+   canvas.setTextSize(2);
    
    DrawIcon(x + dx - 40, y + dy - 40, (uint16_t *) image_data_HouseIconSmall, 30, 30);
 }
@@ -350,10 +373,13 @@ void SolarDisplay::DrawInverterArrow(int x, int y, int dx, int dy)
 {
    DrawIcon(x, y + 48, (uint16_t *) image_data_LineLeftRight, 110, 4);
    canvas.setTextSize(3);
-   if (myData.bmv.relay == "ON") {
+
+   if (myData.bmv.relay == "ON" && myData.tasmotaElite.voltage > 0.0) {
+      canvas.setTextSize(3);
+      canvas.drawCentreString(String(myData.tasmotaElite.power, 0) + "W", x + (dx / 2) - 5, y + 13, 1);
+      canvas.setTextSize(2);
       DrawIcon(x + 16, y + 68, (uint16_t *) image_data_ArrowRight, 70, 15);
-      canvas.drawString("ON", x + 35, y + 13);
-   } else {
+    } else {
       canvas.drawString("OFF", x + 35, y + 13);
    }
    canvas.setTextSize(2);
@@ -371,8 +397,8 @@ void SolarDisplay::DrawGridArrow(int x, int y, int dx, int dy)
    DrawIcon(x, y + 48, (uint16_t *) image_data_LineLeftRight, 110, 4);
    canvas.setTextSize(3);
    if (myData.bmv.relay == "OFF" || myData.tasmotaElite.voltage == 0) {
-      DrawIcon(x + 16, y + 68, (uint16_t *) image_data_ArrowLeft, 70, 15);
       canvas.drawString("ON", x + 35, y + 13);
+      DrawIcon(x + 16, y + 68, (uint16_t *) image_data_ArrowLeft, 70, 15);
    } else {
       canvas.drawString("OFF", x + 35, y + 13);
    }
@@ -388,11 +414,13 @@ void SolarDisplay::DrawGridSymbol(int x, int y, int dx, int dy)
 /* Draw all solar panel data. */
 void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
 {
-   double panelAmpere        = myData.mppt.panelPower / (myData.mppt.panelVoltage / 1000);
-   String panelVoltageInfo   = FormatString("%.2f V ", myData.mppt.panelVoltage / 1000,   10);
-   String panelAmpereInfo    = FormatString("%.2f A ", panelAmpere,                       10);
-   String mainVoltageInfo    = FormatString("%.2f V ", myData.mppt.mainVoltage / 1000.0,  10);
-   String batteryCurrentInfo = FormatString("%.2f A ", myData.mppt.batteryCurrent / 1000, 10);
+   DateTime toDay              = GetRTCTime();
+   TimeSpan timeSpan           = toDay - myData.mppt.lastChange;
+   double   panelAmpere        = myData.mppt.panelPower / (myData.mppt.panelVoltage / 1000);
+   String   panelVoltageInfo   = FormatString("%.2f V ", myData.mppt.panelVoltage / 1000,   10);
+   String   panelAmpereInfo    = FormatString("%.2f A ", panelAmpere,                       10);
+   String   mainVoltageInfo    = FormatString("%.2f V ", myData.mppt.mainVoltage / 1000.0,  10);
+   String   batteryCurrentInfo = FormatString("%.2f A ", myData.mppt.batteryCurrent / 1000, 10);
 
    canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
 
@@ -403,8 +431,17 @@ void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
    canvas.drawString(mainVoltageInfo,    x + 14, y + 114);
    canvas.drawString(batteryCurrentInfo, x + 14, y + 134);
 
-   DrawGraph(x + 140, y - 5, PPV_HISTORY_SIZE, dy, "", 0, PPV_HISTORY_SIZE, "W", 0, 
-             myData.ppvMax, myData.ppvHistoryDate, myData.ppvHistoryValue);
+   if (myData.mppt.lastChange == EmptyDateTime) {
+      canvas.setTextSize(3);
+      canvas.drawString("no data", x + 300, y + 70);
+   } else if (timeSpan.totalseconds() < 60 * 60) {
+      canvas.setTextSize(3);
+      canvas.drawString("no update", x + 300, y + 70);
+   } else {
+      DrawGraph(x + 140, y - 5, PPV_HISTORY_SIZE, dy, "", 0, PPV_HISTORY_SIZE, "W", 0, 
+                myData.ppvMax, myData.ppvHistoryDate, myData.ppvHistoryValue);
+   }
+   canvas.setTextSize(2);
 
    DrawIcon(x + dx - 40, y + dy - 40, (uint16_t *) image_data_SolarIconSmall, 30, 30);
 }

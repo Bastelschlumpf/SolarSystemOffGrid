@@ -173,3 +173,16 @@ int WifiGetRssiAsQualityInt(int rssi)
    }
    return quality;
 }
+
+/* Trim special characters */
+String Trim(String string, String Chars)
+{
+   String ret;
+
+   for (int i = 0; i < string.length() - 1; i++) {
+      if (Chars.indexOf(string[i]) < 0) {
+         ret += string[i];
+      }
+   }
+   return ret;
+}
