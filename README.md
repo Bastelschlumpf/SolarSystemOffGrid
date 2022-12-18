@@ -20,6 +20,9 @@
    In particular, the behavior in summer months and the interaction with the batteries has not yet been tested by me
    extensively tested in practice. 
 
+### Safety aspects
+  * [Some thoughts about security](docs/SafetyAspects.md)
+
 ### Circuit
    Circuit diagram with pictures of the components   
    ![Circuit](images/Circuit.png "Figure 2")
