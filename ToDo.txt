@@ -7,5 +7,5 @@ ok - E-Ink M5paper
 ok - Keywords
 
 Monitor
-- BMV-Alarm auswerten und anzeigen (AR, Alarm)
+ok - BMV-Alarm auswerten und anzeigen (AR, Alarm)
 - Beschreibung der Monitoranzeige

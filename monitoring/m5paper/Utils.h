@@ -23,6 +23,47 @@
 #include <Time.h>
 #include <TimeLib.h> 
 
+/**
+  * HistoryData: A collection af history float values with its DateTime position.
+  */
+class HistoryData
+{
+public:
+   int       size_;     //!< Size of the history items.
+   float    *values_;   //!< Histpry double values.
+   DateTime *dates_;    //!< History timeline.
+   String    unitName_; //!< Unit Name of the values
+   int      *counts_;   //!< Occurence.
+   float     max_;      //!< Max value.
+
+public:
+   HistoryData(int historySize, String unitName)
+      : size_(historySize)
+      , unitName_(unitName)
+      , max_(0.0)
+   {
+      values_ = new float[size_];
+      dates_  = new DateTime[size_];
+      counts_ = new int[size_];
+
+      clear();
+   }
+   ~HistoryData()
+   {
+      delete [] values_;
+      delete [] dates_;
+      delete [] counts_;
+   }
+
+   void clear()
+   {
+      memset(values_, 0, size_ * sizeof(float));
+      memset(dates_,  0, size_ * sizeof(DateTime));
+      memset(counts_, 0, size_ * sizeof(int));
+      max_ = 0.0;
+   }
+};
+
 /* Convert the RTC date time to DD.MM.YYYY HH:MM:SS */
 String getRTCDateTimeString() 
 {

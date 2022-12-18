@@ -29,26 +29,28 @@
 
 const DateTime EmptyDateTime(2000, 1, 1, 0, 0, 0);
 
+
 /**
   * BMV data.
   */
 class BMV
 {
 public:
-   double   consumedAmpHours;           // CE (mAh)
-   double   stateOfCharge;              // SOC (promille)
-   double   midPointDeviation;          // DM (promille)
-   double   numberOfChargeCycles;       // H4 
-   double   dischargedEnergy;           // H17 (0.01 kWh)
-   double   chargedEnergy;              // H18 (0.01 kWh)
-   double   cumulativeAmpHoursDrawn;    // H6 (mAh)
-   double   secondsSinceLastFullCharge; // H9 (Seconds)
-   double   batteryCurrent;             // I (mA)
-   double   instantaneousPower;         // P (W)
-   String   relay;                      // Relay state (ON | OFF)
-   double   timeToGo;                   // TTG (Minutes)
-   double   mainVoltage;                // V (mV)
-   DateTime lastChange;                 // Last change of the data
+   double   consumedAmpHours;           //!< CE (mAh)
+   double   stateOfCharge;              //!< SOC (promille)
+   double   midPointDeviation;          //!< DM (promille)
+   double   numberOfChargeCycles;       //!< H4 
+   double   dischargedEnergy;           //!< H17 (0.01 kWh)
+   double   chargedEnergy;              //!< H18 (0.01 kWh)
+   double   cumulativeAmpHoursDrawn;    //!< H6 (mAh)
+   double   secondsSinceLastFullCharge; //!< H9 (Seconds)
+   double   batteryCurrent;             //!< I (mA)
+   double   instantaneousPower;         //!< P (W)
+   String   relay;                      //!< Relay state (ON | OFF)
+   double   timeToGo;                   //!< TTG (Minutes)
+   double   mainVoltage;                //!< V (mV)
+   double   alarmReason;                //!< Alarm?!
+   DateTime lastChange;                 //!< Last change of the data
    
 public:
    BMV()
@@ -65,6 +67,7 @@ public:
       , relay("")
       , timeToGo(0.0)
       , mainVoltage(0.0)
+      , alarmReason(0.0)
       , lastChange(EmptyDateTime)
    {}
    
@@ -77,17 +80,21 @@ public:
 class MPPT
 {
 public:   
-   double   stateOfOperation;      // CS (Off 0, Low power 1, Fault 2, Bulk 3, Absorption 4, Float 5, Inverting 9)
-   double   yieldTotal;            // H19 (0.01 kWh)
-   double   yieldToday;            // H20 (0.01 kWh)
-   double   maximumPowerToday;     // H21 (W)
-   double   yieldYesterday;        // H22 (0.01 kWh)
-   double   maximumPowerYesterday; // H23 (W)
-   double   batteryCurrent;        // I (mA)
-   double   panelPower;            // PPV (W)
-   double   mainVoltage;           // V (mV)
-   double   panelVoltage;          // VPV (mV)
-   DateTime lastChange;            // Last change of the data
+   double      stateOfOperation;      //!< CS (Off 0, Low power 1, Fault 2, Bulk 3, Absorption 4, Float 5, Inverting 9)
+   double      yieldTotal;            //!< H19 (0.01 kWh)
+   double      yieldToday;            //!< H20 (0.01 kWh)
+   double      maximumPowerToday;     //!< H21 (W)
+   double      yieldYesterday;        //!< H22 (0.01 kWh)
+   double      maximumPowerYesterday; //!< H23 (W)
+   double      batteryCurrent;        //!< I (mA)
+   double      panelPower;            //!< PPV (W)
+   double      mainVoltage;           //!< V (mV)
+   double      panelVoltage;          //!< VPV (mV)
+   double      errorCode;             //!< error?!
+   DateTime    lastChange;            //!< Last change of the data
+
+   HistoryData ppvHistory;            //!< Panel power history
+   HistoryData yieldHistory;          //!< Yield history
    
 public:
    MPPT()
@@ -101,7 +108,10 @@ public:
       , panelPower(0.0)
       , mainVoltage(0.0)
       , panelVoltage(0.0)
+      , errorCode(0.0)
       , lastChange(EmptyDateTime)
+      , ppvHistory(PPV_HISTORY_SIZE, "W")
+      , yieldHistory(PPV_HISTORY_SIZE, "kWh")
    {
    }
 
@@ -114,17 +124,22 @@ public:
 class TasmotaElite
 {
 public:   
-   double   voltage;    //!< grid voltage
-   double   ampere;     //!< grid power consumption
-   double   power;      //!< consumption
-   DateTime lastChange; //!< Last change of the data
-   
+   double      voltage;      //!< grid voltage
+   double      ampere;       //!< grid power consumption
+   double      power;        //!< consumption
+   DateTime    lastChange;   //!< Last change of the data
+
+   HistoryData powerHistory; //!< Grid power history
+   HistoryData yieldHistory; //!< Grid power history
+
 public:
    TasmotaElite()
       : voltage(0.0)
       , ampere(0.0)
       , power(0.0)
       , lastChange(EmptyDateTime)
+      , powerHistory(GRID_HISTORY_SIZE, "W")
+      , yieldHistory(GRID_HISTORY_SIZE, "kWh")
    {
    }
 
@@ -148,14 +163,6 @@ public:
    BMV          bmv;              //!< The BMW data
    MPPT         mppt;             //!< The MPPT data
    TasmotaElite tasmotaElite;     //!< The Tasmota Elite data
-                                  
-   float        ppvHistoryValue[PPV_HISTORY_SIZE];   //!< Solar panel power history values.
-   DateTime     ppvHistoryDate[PPV_HISTORY_SIZE];    //!< dateTime of the history item.
-   float        ppvMax;                              //!< Max PPV
-
-   float        gridHistoryValue[GRID_HISTORY_SIZE]; //!< Grid power history values.
-   DateTime     gridHistoryDate[GRID_HISTORY_SIZE];  //!< Grid dateTime of the history item.
-   float        gridMax;                             //!< Max grid power
 
 public:
    MyData()
@@ -165,13 +172,6 @@ public:
       , sht30Temperatur(0)
       , sht30Humidity(0)
    {
-      memset(ppvHistoryValue, 0, sizeof(ppvHistoryValue));
-      memset(ppvHistoryDate,  0, sizeof(ppvHistoryDate));
-      ppvMax = 0;
-      
-      memset(gridHistoryValue, 0, sizeof(gridHistoryValue));
-      memset(gridHistoryDate,  0, sizeof(gridHistoryDate));
-      gridMax = 0;
    }
 
    void Dump();
@@ -230,6 +230,7 @@ void BMV::Dump()
    Serial.println("[bmv] relay: "                      + relay);
    Serial.println("[bmv] timeToGo: "                   + String(timeToGo));
    Serial.println("[bmv] mainVoltage: "                + String(mainVoltage));
+   Serial.println("[bmv] alarmReason: "                + String(alarmReason));
 }
 
 /* helper function to dump all the collected data */
@@ -245,6 +246,7 @@ void MPPT::Dump()
    Serial.println("[mppt] panelPower: "            + String(panelPower));
    Serial.println("[mppt] mainVoltage: "           + String(mainVoltage));
    Serial.println("[mppt] panelVoltage: "          + String(panelVoltage));
+   Serial.println("[mppt] errorCode: "             + String(errorCode));
 }
 
 /* helper function to dump all the collected data */

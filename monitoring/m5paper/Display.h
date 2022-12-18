@@ -37,10 +37,12 @@ protected:
 protected:
    void   DrawCircle            (int32_t x, int32_t y, int32_t r, uint32_t color, int32_t degFrom = 0, int32_t degTo = 360);
    void   DrawIcon              (int x, int y, const uint16_t *icon, int dx = 64, int dy = 64, bool highContrast = false);
-   void   DrawGraph             (int x, int y, int dx, int dy, String unitX,int xMin, int xMax, String unitY, int yMin, int yMax, DateTime dates[], float values[]);
+   void   DrawGraph             (int x, int y, int dx, int dy, HistoryData &powerHistory, HistoryData &yieldHistory);
    String FormatString          (String format, double data, int fillLen = 8);
-   String StateOfOperation      (double value);
-   
+   String StateOfOperation      (int value);
+   String BmvAlarmReason        (int value);   
+   String MpptErrorCode         (int value);
+
    void   DrawHead              (int x, int y, int dx, int dy);
    void   DrawHeadVersion       (int x, int y);
    void   DrawHeadUpdated       (int x, int y);
@@ -99,63 +101,115 @@ void SolarDisplay::DrawIcon(int x, int y, const uint16_t *icon, int dx /*= 64*/,
    }
 }
 
-//   DrawGraph(x + 150, y - 5, PPV_HISTORY_SIZE, dy, 0, PPV_HISTORY_SIZE, 0, myData.ppvMax, myData.ppvHistory);
-
 /* Draw a graph with x- and y-axis and values */
-void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, String unitX, int xMin, int xMax, String unitY, int yMin, int yMax, DateTime dates[], float values[])
+void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHistory, HistoryData &yieldHistory)
 {
-   String yMinString = String(yMin) + unitY;
-   String yMaxString = String(yMax) + unitY;
-   int    textWidth  = 5 + max(yMinString.length() * 5, yMaxString.length() * 5);
-   int    graphX     = x + 5 + textWidth + 5;
-   int    graphY     = y + 25;
-   int    graphDX    = dx - textWidth - 20;
-   int    graphDY    = dy - 25 - 20;
+   String yMinString  = "0"                          + powerHistory.unitName_;
+   String yMaxString1 = String(powerHistory.max_, 0) + powerHistory.unitName_;
+   String yMaxString2 = String(yieldHistory.max_, 0) + yieldHistory.unitName_;
+   int    textWidth   = 5 + max(yMaxString1.length() * 8, yMaxString2.length() * 8);
+   int    graphX      = x + 5 + textWidth + 5;
+   int    graphY      = y + 25;
+   int    graphDX     = dx - textWidth - 20;
+   int    graphDY     = dy - 25 - 20;
 
-   canvas.setTextSize(1);
-   canvas.drawString(yMaxString, x + 5, graphY - 5);   
-   canvas.drawString(yMinString, x + 5, graphY + graphDY - 3);   
+   canvas.setTextSize(2);
+   canvas.drawString(yMaxString1, x + 5,       graphY - 5);   
+   canvas.drawString(yMaxString2, x + dx - 18, graphY - 5);   
+   canvas.drawString(yMinString,  x + 28,      graphY + graphDY - 12);   
 
-   if (xMax - xMin > 0) {
+   canvas.drawLine(x + dx + 11, graphY + 20, x + dx + 21, graphY + 20, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx + 11, graphY + 20, x + dx + 11, graphY + 30, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx +  1, graphY + 30, x + dx + 11, graphY + 30, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx + 21, graphY + 20, x + dx + 21, graphY + 25, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx + 21, graphY + 25, x + dx + 31, graphY + 25, M5EPD_Canvas::G15);         
+
+   canvas.drawRect(graphX, graphY, graphDX, graphDY, M5EPD_Canvas::G15);   
+
+   if (powerHistory.size_ > 0) {
       String oldDay;
-      float  xStep = (float) graphDX / (float) (xMax - xMin);
+      float  xStep = (float) graphDX / (float) powerHistory.size_;
       
-      for (int i = xMin; i < (xMax - xMin); i++) {
-         DateTime date = dates[i - xMin];
-         String   day = String(date.day());
+      canvas.setTextSize(1);
+      for (int i = 0; i < powerHistory.size_; i++) {
+         DateTime date = powerHistory.dates_[i];
+         String   day  = String(date.day());
          
          if (oldDay != day && date.hour() >= 12) {
+            int xPos = graphX - 3 + i * xStep;
+            
             oldDay = day;
-            canvas.drawCentreString(day, graphX - 3 + i * xStep, graphY + graphDY + 5, 1);
+            if (xPos > graphX) {
+               canvas.drawCentreString(day, xPos, graphY + graphDY + 5, 1);
+            }
          }
       }
    }
 
-   canvas.drawRect(graphX, graphY, graphDX, graphDY, M5EPD_Canvas::G15);   
-
-   if (yMax - yMin > 0) {
-      float yStep = (float) graphDY / (float) (yMax - yMin);
+   if (powerHistory.max_ > 0) {
+      float yStep = (float) graphDY / (float) powerHistory.max_;
       
-      for (int i = xMin; i < xMax; i++) {
-         float yValue   = values[i - xMin];
-         float yValueDY = (float) graphDY / (float) (yMax - yMin);
-         float xPos     = (float) graphX + graphDX / (float) (xMax - xMin) * i;
-         float yPos     = (float) graphY + graphDY - (float) (yValue - yMin) * yValueDY;
+      for (int i = 0; i < powerHistory.size_; i++) {
+         float yValue   = powerHistory.values_[i];
+         float yValueDY = (float) graphDY / (float) powerHistory.max_;
+         float xPos     = (float) graphX + graphDX / (float) powerHistory.size_ * i;
+         float yPos     = (float) graphY + graphDY - (float) (yValue) * yValueDY;
    
          if (yPos > graphY + graphDY) yPos = graphY + graphDY;
          if (yPos < graphY)           yPos = graphY;
    
-         // canvas.fillCircle(xPos, yPos, 2, M5EPD_Canvas::G15);
-         if (i > xMin) {
+         if (i > 0) {
             canvas.drawLine(xPos, graphY + graphDY, xPos, yPos, M5EPD_Canvas::G15);         
             // Serial.printf("GraphLine: %d %f %d, %d\n", i, yValue, (int) xPos, (int) yPos);
+         }
+      }
+   }
+   
+   if (yieldHistory.max_ > 0) {
+      String oldDay;
+      float  xOld      = graphX;
+      float  yOld      = 0.0;
+      float  xStep     = (float) graphDX / (float) yieldHistory.size_;
+      float  yValueDY  = (float) graphDY / (float) yieldHistory.max_;
+      float  yMaxValue = 0.0;
+
+      for (int i = 0; i < yieldHistory.size_; i++) {
+         DateTime date   = yieldHistory.dates_[i];
+         String   day    = String(date.day());
+         float    yValue = yieldHistory.values_[i];
+         float    xPos   = graphX - 3 + i * xStep;
+
+         if (yValue > yMaxValue) {
+            yMaxValue = yValue;
+         }
+
+         if (oldDay != day) {
+            float yPos = graphY + graphDY - yMaxValue * yValueDY;
+
+            if (xOld > 0 && xPos > graphX) {
+               if (yMaxValue > 0) {
+                  int xTextPos = xOld + (xPos - xOld) / 2;
+                  int yTextPos = yPos - 12;
+
+                  canvas.fillRect(xTextPos - 13, yTextPos - 1, 26, 9, M5EPD_Canvas::G0);   
+                  canvas.drawCentreString(String(yMaxValue, 2), xTextPos, yTextPos, 1);
+               }
+               canvas.drawLine(xOld, yOld, xOld, yPos, M5EPD_Canvas::G15);         
+               canvas.drawLine(xOld, yPos, xPos, yPos, M5EPD_Canvas::G15);         
+               canvas.drawLine(xOld - 1, yOld - 1, xOld - 1, yPos - 1, M5EPD_Canvas::G0);         
+               canvas.drawLine(xOld - 1, yPos - 1, xPos - 1, yPos - 1, M5EPD_Canvas::G0);         
+            }
+            oldDay    = day;
+            yMaxValue = 0.0;
+            xOld      = xPos;
+            yOld      = yPos;
          }
       }
    }
 }
 
 /* Tranlate the state of operation to readable string. */
-String SolarDisplay::StateOfOperation(double value) 
+String SolarDisplay::StateOfOperation(int value) 
 {
    String ret;
 
@@ -166,6 +220,51 @@ String SolarDisplay::StateOfOperation(double value)
    else if (value == 4) ret = "Absoption";
    else if (value == 5) ret = "Float";
    else if (value == 9) ret = "Inverting";
+
+   return ret;
+}
+
+/* Tranlate the mppt error code to readable string. */
+String SolarDisplay::BmvAlarmReason(int value) 
+{
+   String ret;
+
+   if (value &    1) ret += "[Low Voltage]";
+   if (value &    2) ret += "[High Voltage]";
+   if (value &    4) ret += "[Low SOC]";
+   if (value &    8) ret += "[Low Starter Voltage]";
+   if (value &   16) ret += "[High Starter Voltage]";
+   if (value &   32) ret += "[Low Temperature]";
+   if (value &   64) ret += "[High Temperature]";
+   if (value &  128) ret += "[Mid Voltage]";
+   if (value &  256) ret += "[Overload]";
+   if (value &  512) ret += "[DC-ripple]";
+   if (value & 1024) ret += "[Low V AC out]";
+   if (value & 2048) ret += "[High V AC out]";
+
+   return ret;
+}
+
+/* Tranlate the mppt error code to readable string. */
+String SolarDisplay::MpptErrorCode(int value) 
+{
+   String ret;
+
+        if (value ==   0) ret = "No error";
+   else if (value ==   2) ret = "Battery voltage too high";
+   else if (value ==  17) ret = "Charger temperature too high";
+   else if (value ==  18) ret = "Charger over current";
+   else if (value ==  19) ret = "Charger current reversed";
+   else if (value ==  20) ret = "Bulk time limit exceeded";
+   else if (value ==  21) ret = "Current sensor issue (sensor bias/sensor broken)";
+   else if (value ==  26) ret = "Terminals overheated";
+   else if (value ==  33) ret = "Input voltage too high (solar panel)";
+   else if (value ==  34) ret = "Input current too high (solar panel)";
+   else if (value ==  38) ret = "Input shutdown (due to excessive battery voltage)";
+   else if (value == 116) ret = "Factory calibration data lost";
+   else if (value == 117) ret = "Invalid/incompatible firmware";
+   else if (value == 119) ret = "User settings invalid";
+   else ret = "ErrorCode: " + String(value, 0);
 
    return ret;
 }
@@ -209,7 +308,7 @@ void SolarDisplay::DrawHeadRSSI(int x, int y)
 {
    int iQuality = WifiGetRssiAsQualityInt(myData.wifiRSSI);
 
-   canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", x - 43, y - 15);
+   canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", x - 43, y - 14);
    if (iQuality >= 80) DrawCircle(x + 12, y, 16, M5EPD_Canvas::G15, 225, 315); 
    if (iQuality >= 40) DrawCircle(x + 12, y, 12, M5EPD_Canvas::G15, 225, 315); 
    if (iQuality >= 20) DrawCircle(x + 12, y,  8, M5EPD_Canvas::G15, 225, 315); 
@@ -247,7 +346,10 @@ void SolarDisplay::DrawBatteryInfo(int x, int y, int dx, int dy)
 
    canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
 
-   if (myData.bmv.lastChange == EmptyDateTime) {
+   if (myData.bmv.alarmReason > 0.0) {
+      canvas.setTextSize(3);
+      canvas.drawString(BmvAlarmReason(myData.bmv.alarmReason), x + 300, y + 70);
+   } else if (myData.bmv.lastChange == EmptyDateTime) {
       canvas.setTextSize(3);
       canvas.drawString("no data", x + 45, y + 70);
    } else if (timeSpan.totalseconds() < 60 * 60) {
@@ -307,10 +409,9 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
       canvas.drawString("no update", x + 100, y + 70);
    } else {
       canvas.drawString(voltageInfo, x + 14, y + 14);
-      canvas.drawString(ampereInfo,  x + 14, y + 44);
+      canvas.drawString(ampereInfo,  x + 14, y + 34);
 
-      DrawGraph(x + 120, y - 5, GRID_HISTORY_SIZE, dy, "", 0, GRID_HISTORY_SIZE, "W", 0, 
-                myData.gridMax, myData.gridHistoryDate, myData.gridHistoryValue);
+      DrawGraph(x + 120, y - 5, myData.tasmotaElite.powerHistory.size_, dy, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
    }
    canvas.setTextSize(2);
    
@@ -335,13 +436,13 @@ void SolarDisplay::DrawBatterySymbol(int x, int y, int dx, int dy)
    }
 
    if (stateOfCharge < 40) {   
-      canvas.drawString(String(myData.bmv.stateOfCharge / 10.0, 0) + "%", x + 6, y + (dy / 2) - 8);
+      canvas.drawCentreString(String(myData.bmv.stateOfCharge / 10.0, 0) + "%", x + 30, y + (dy / 2) - 8, 1);
    } else if (stateOfCharge > 65) {   
       canvas.setTextColor(BLACK, WHITE);
-      canvas.drawString(String(myData.bmv.stateOfCharge / 10.0, 0) + "%", x + 6, y + (dy / 2) - 8);
+      canvas.drawCentreString(String(myData.bmv.stateOfCharge / 10.0, 0) + "%", x + 30, y + (dy / 2) - 8, 1);
    } else {
       canvas.setTextColor(BLACK, WHITE);
-      canvas.drawString(String(myData.bmv.stateOfCharge / 10.0, 0) + "%", x + 6, y + dy - 30);
+      canvas.drawCentreString(String(myData.bmv.stateOfCharge / 10.0, 0) + "%", x + 30, y + dy - 30, 1);
    }
    canvas.setTextColor(WHITE, BLACK);
 }
@@ -431,15 +532,17 @@ void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
    canvas.drawString(mainVoltageInfo,    x + 14, y + 114);
    canvas.drawString(batteryCurrentInfo, x + 14, y + 134);
 
-   if (myData.mppt.lastChange == EmptyDateTime) {
+   if (myData.mppt.errorCode > 0.0) {
+      canvas.setTextSize(3);
+      canvas.drawString(MpptErrorCode(myData.mppt.errorCode), x + 300, y + 70);
+   } else if (myData.mppt.lastChange == EmptyDateTime) {
       canvas.setTextSize(3);
       canvas.drawString("no data", x + 300, y + 70);
    } else if (timeSpan.totalseconds() < 60 * 60) {
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 300, y + 70);
    } else {
-      DrawGraph(x + 140, y - 5, PPV_HISTORY_SIZE, dy, "", 0, PPV_HISTORY_SIZE, "W", 0, 
-                myData.ppvMax, myData.ppvHistoryDate, myData.ppvHistoryValue);
+      DrawGraph(x + 140, y - 5, myData.mppt.ppvHistory.size_, dy, myData.mppt.ppvHistory, myData.mppt.yieldHistory);
    }
    canvas.setTextSize(2);
 

@@ -307,43 +307,37 @@ bool IoBrokerValue::getLastChange(DateTime &dateTime, String topic)
 class IoBrokerHistory : public IoBrokerBase
 {
 protected:
-   DateTime *historyDate_;  //!< The history dates of the last 4 weeks
-   float    *historyValue_; //!< The values for these dates.
-   int      *historyCount_; //!< How many date comes in per date.
-   int       historySize_;  //!< Size of the data arrays
-   float    &maxValue_;     //!< The maximum value
-   int       days_;         //!< How many days we will show
-   DateTime  fromDate_;     //!< Start date for the request (4 weeks earlier)
-   DateTime  toDate_;       //!< End date, tomorrow
+   HistoryData &historyData_;  //!< The history data of the last 4 weeks
+   int          days_;         //!< How many days we will show
+   DateTime     fromDate_;     //!< Start date for the request (4 weeks earlier)
+   DateTime     toDate_;       //!< End date, tomorrow
 
-   String   valueString_;   //!< Incommig data  
-   bool     valueStart_;    //!< One incomming data '[xxx, xxx]' has startet
+   String       valueString_;   //!< Incommig data  
+   bool         valueStart_;    //!< One incomming data '[xxx, xxx]' has startet
 
 protected:
    virtual void onRequest ();
    virtual void onChar    (char c);
 
    void parsValue(String valueString);
+
+public:
+   enum HISTORY_TYPE { AVG, MAX } eHistoryType_;
    
 public:
-   IoBrokerHistory(IoBrokerWifiClient &wifiClient, DateTime historyDate[], float historyValue[], int historySize, float &maxValue, int days)
+   IoBrokerHistory(IoBrokerWifiClient &wifiClient, HistoryData &historyData, int days, HISTORY_TYPE eHistoryType = AVG)
       : IoBrokerBase(wifiClient)
-      , historyDate_(historyDate)
-      , historyValue_(historyValue)
-      , historySize_(historySize)
-      , maxValue_(maxValue)
+      , historyData_(historyData)
       , days_(days)
       , valueStart_(false)
+      , eHistoryType_(eHistoryType)
    {
-      historyCount_ = new int[historySize_];
-      memset(historyCount_, 0, historySize_ * sizeof(int));
    }
    ~IoBrokerHistory()
    {
-      delete [] historyCount_;
    }
 
-   bool getHistoryValues(String topic);
+   bool getHistoryValues(String topic, float factor = 1.0);
 };
 
 /* The request has started. */
@@ -381,32 +375,37 @@ void IoBrokerHistory::parsValue(String valueString)
 
             DateTime jsonDate(timestamp.toInt());
 
-            int historyIndex = (double) historySize_ / (double) (toDate_.secondstime() - fromDate_.secondstime()) * (double) (jsonDate.secondstime() - fromDate_.secondstime());
+            int historyIndex = (double) historyData_.size_ / (double) (toDate_.secondstime() - fromDate_.secondstime()) * (double) (jsonDate.secondstime() - fromDate_.secondstime());
 
-            if (historyIndex >= 0 && historyIndex < historySize_) {
-               if (maxValue_ < value.toFloat()) {
-                  maxValue_ = value.toFloat();
+            if (historyIndex >= 0 && historyIndex < historyData_.size_) {
+               if (historyData_.max_ < value.toFloat()) {
+                  historyData_.max_ = value.toFloat();
                }
-               historyValue_[historyIndex] += value.toFloat();
-               historyCount_[historyIndex]++;
+               if (eHistoryType_ == AVG) {
+                  historyData_.values_[historyIndex] += value.toFloat();
+                  historyData_.counts_[historyIndex]++;
+               } else { // MAX
+                  if (value.toFloat() > historyData_.values_[historyIndex]) {
+                     historyData_.values_[historyIndex] = value.toFloat();
+                  }
+                  historyData_.counts_[historyIndex] = 1;
+               }
             } else {
                Serial.println("Wrong history index! [" + String(historyIndex) + ']');
             }
-            // Serial.printf("**** Index: %d Value: %.0f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
+            // Serial.printf("**** Index: %d Value: %f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
          }
       }
    }
 }
 
 /* Read all the history data of one mqtt type. */
-bool IoBrokerHistory::getHistoryValues(String topic)
+bool IoBrokerHistory::getHistoryValues(String topic, float factor /*= 1.0*/)
 {
    String   param;
    DateTime toDay = GetRTCTime();
 
-   maxValue_ = 0.0;
-   memset(historyValue_, 0, historySize_ * sizeof(float));
-   memset(historyCount_, 0, sizeof(historyCount_));
+   historyData_.clear();
 
    // Calculate the from and to dates (4 weeks ago and tomorrow) and format these as a query param.
    toDate_   = toDay   + TimeSpan(    0, 12, 0, 0);
@@ -417,16 +416,16 @@ bool IoBrokerHistory::getHistoryValues(String topic)
    // Initialize the right time to the array positions.
    int fromUnixTime = fromDate_.unixtime();                    
    int toUnixTime   = toDate_.unixtime();                    
-   for (int i = 0; i < historySize_; i++) {
-      historyDate_[i] = DateTime((int) ((float) fromUnixTime + i * (float) (toUnixTime - fromUnixTime) / (float) historySize_));
+   for (int i = 0; i < historyData_.size_; i++) {
+      historyData_.dates_[i] = DateTime((int) ((float) fromUnixTime + i * (float) (toUnixTime - fromUnixTime) / (float) historyData_.size_));
    }
 
    // Send request, pars on every date item internaly
    if (sendRequest(IOBROKER_QUERY, topic, param)) {
       // average on every data
-      for (int i = 0; i < historySize_; i++) {
-         if (historyCount_[i] > 0) {
-            historyValue_[i] = historyValue_[i] / historyCount_[i];
+      for (int i = 0; i < historyData_.size_; i++) {
+         if (historyData_.counts_[i] > 0) {
+            historyData_.values_[i] = factor * historyData_.values_[i] / historyData_.counts_[i];
          }
       }
       return true;
@@ -443,10 +442,12 @@ bool IoBrokerHistory::getHistoryValues(String topic)
 void GetIoBrokerValues(MyData &myData)
 {
    IoBrokerWifiClient  ioBrokerWifiClient;
-   IoBrokerPlain       ioBrokerPlain       (ioBrokerWifiClient);
-   IoBrokerValue       ioBrokerValue       (ioBrokerWifiClient);
-   IoBrokerHistory     ioBrokerPPVHistory  (ioBrokerWifiClient, myData.ppvHistoryDate,  myData.ppvHistoryValue,  PPV_HISTORY_SIZE,  myData.ppvMax,  30);
-   IoBrokerHistory     ioBrokerGridHistory (ioBrokerWifiClient, myData.gridHistoryDate, myData.gridHistoryValue, GRID_HISTORY_SIZE, myData.gridMax,  7);
+   IoBrokerPlain       ioBrokerPlain            (ioBrokerWifiClient);
+   IoBrokerValue       ioBrokerValue            (ioBrokerWifiClient);
+   IoBrokerHistory     ioBrokerPPVHistory       (ioBrokerWifiClient, myData.mppt.ppvHistory,           30);                       // 30 days
+   IoBrokerHistory     ioBrokerPPVYieldHistory  (ioBrokerWifiClient, myData.mppt.yieldHistory,         30, IoBrokerHistory::MAX); // 30 days
+   IoBrokerHistory     ioBrokerGridHistory      (ioBrokerWifiClient, myData.tasmotaElite.powerHistory,  7, IoBrokerHistory::MAX); //  7 days
+   IoBrokerHistory     ioBrokerGridYieldHistory (ioBrokerWifiClient, myData.tasmotaElite.yieldHistory,  7, IoBrokerHistory::MAX); //  7 days
 
    ioBrokerPlain.getPlainValue(myData.bmv.consumedAmpHours,           "mqtt.0.bmv.CE");
    ioBrokerPlain.getPlainValue(myData.bmv.stateOfCharge,              "mqtt.0.bmv.SOC");
@@ -475,12 +476,16 @@ void GetIoBrokerValues(MyData &myData)
    ioBrokerPlain.getPlainValue(myData.mppt.panelVoltage,              "mqtt.0.mppt.VPV");
    ioBrokerValue.getLastChange(myData.mppt.lastChange,                "mqtt.0.mppt.V");
 
-   ioBrokerPPVHistory.getHistoryValues("mqtt.0.mppt.PPV");
+   ioBrokerPPVHistory.getHistoryValues      ("mqtt.0.mppt.PPV");
+   ioBrokerPPVYieldHistory.getHistoryValues ("mqtt.0.mppt.H22", 0.01);
+   myData.mppt.yieldHistory.max_ = 2.0; // Max yield to 2 kWh
 
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.voltage,           "sonoff.0.TasmotaElite.ENERGY_Voltage");
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.ampere,            "sonoff.0.TasmotaElite.ENERGY_Current");
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.power,             "sonoff.0.TasmotaElite.ENERGY_Power");
    ioBrokerValue.getLastChange(myData.tasmotaElite.lastChange,        "sonoff.0.TasmotaElite.ENERGY_Voltage");
 
-   ioBrokerGridHistory.getHistoryValues("sonoff.0.TasmotaElite.ENERGY_Power");
+   ioBrokerGridHistory.getHistoryValues      ("sonoff.0.TasmotaElite.ENERGY_Power");
+   ioBrokerGridYieldHistory.getHistoryValues ("sonoff.0.TasmotaElite.ENERGY_Yesterday");
+   myData.tasmotaElite.yieldHistory.max_ = 2.0; // Max consumption to 2 kWh
 }
