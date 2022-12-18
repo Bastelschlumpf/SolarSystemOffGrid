@@ -8,4 +8,4 @@ ok - Keywords
 
 Monitor
 ok - BMV-Alarm auswerten und anzeigen (AR, Alarm)
-- Beschreibung der Monitoranzeige
+ok - Beschreibung der Monitoranzeige (Mit tabelle der angezeigten Werte)
