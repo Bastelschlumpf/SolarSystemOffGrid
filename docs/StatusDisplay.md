@@ -1,10 +1,13 @@
 
 ### Status display via  E-Ink display (M5Paper)
 
-   **Work in Progress**
+**Work in Progress**
 
-   First version  
-   ![Circuit](../images/M5Paper.png "M5Paper")
+![Circuit](../images/M5Paper.png "M5Paper")
+
+**Wall mount**  
+   See https://www.thingiverse.com/thing:4767014  
+   ![Wall mountr](../images/M5PaperWallMount.png "WallMount")
 
    Arduino  
    M5Paper  
