@@ -188,16 +188,20 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
 
             if (xOld > 0 && xPos > graphX) {
                if (yMaxValue > 0) {
-                  int xTextPos = xOld + (xPos - xOld) / 2;
-                  int yTextPos = yPos - 12;
-
+                  int    xTextPos        = xOld + (xPos - xOld) / 2;
+                  int    yTextPos        = yPos - 12;
+                  String yMaxValueString = String(yMaxValue, 2);
+                  
                   canvas.fillRect(xTextPos - 13, yTextPos - 1, 26, 9, M5EPD_Canvas::G0);   
-                  canvas.drawCentreString(String(yMaxValue, 2), xTextPos, yTextPos, 1);
+                  canvas.drawCentreString(yMaxValueString, xTextPos, yTextPos, 1);
                }
-               canvas.drawLine(xOld, yOld, xOld, yPos, M5EPD_Canvas::G15);         
-               canvas.drawLine(xOld, yPos, xPos, yPos, M5EPD_Canvas::G15);         
-               canvas.drawLine(xOld - 1, yOld - 1, xOld - 1, yPos - 1, M5EPD_Canvas::G0);         
-               canvas.drawLine(xOld - 1, yPos - 1, xPos - 1, yPos - 1, M5EPD_Canvas::G0);         
+
+               xPos = max((float) graphX + 1, xPos);
+               xOld = max((float) graphX + 1, xOld);
+               canvas.drawLine(xOld - 0, yOld - 0, xOld - 0, yPos - 0, M5EPD_Canvas::G15);         
+               canvas.drawLine(xOld - 0, yPos - 0, xPos - 0, yPos - 0, M5EPD_Canvas::G15);         
+               canvas.drawLine(xOld - 1, yOld - 1, xOld - 1, yPos - 1, M5EPD_Canvas::G15);         
+               canvas.drawLine(xOld - 1, yPos - 1, xPos - 1, yPos - 1, M5EPD_Canvas::G15);         
             }
             oldDay    = day;
             yMaxValue = 0.0;
@@ -352,7 +356,7 @@ void SolarDisplay::DrawBatteryInfo(int x, int y, int dx, int dy)
    } else if (myData.bmv.lastChange == EmptyDateTime) {
       canvas.setTextSize(3);
       canvas.drawString("no data", x + 45, y + 70);
-   } else if (timeSpan.totalseconds() < 60 * 60) {
+   } else if (timeSpan.totalseconds() > 60 * 60) {
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 45, y + 70);
    } else {
@@ -374,11 +378,11 @@ void SolarDisplay::DrawBatteryInfo(int x, int y, int dx, int dy)
 /* Draw a solar symbol. */
 void SolarDisplay::DrawSolarSymbol(int x, int y, int dx, int dy)
 {
-   DrawIcon(x, y, (uint16_t *) image_data_SolarIcon, 100, 100);
+   DrawIcon(x, y, (uint16_t *) image_data_SolarIcon, 150, 150);
 
    canvas.setTextSize(3);
-   canvas.drawCentreString(String(myData.mppt.panelPower, 0)      + "W",  x + 75, y - 10, 1);
-   canvas.drawCentreString(String(myData.mppt.yieldToday * 10, 0) + "Wh", x + 85, y + 22, 1);
+   canvas.drawCentreString(String(myData.mppt.panelPower, 0)      + "W",  x + 77, y + 13, 1);
+   canvas.drawCentreString(String(myData.mppt.yieldToday * 10, 0) + "Wh", x + 87, y + 45, 1);
    canvas.setTextSize(2);
 }
 
@@ -401,10 +405,10 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
 
    canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
 
-   if (myData.tasmotaElite.lastChange == EmptyDateTime) {
+   if (myData.tasmotaElite.alive == "false") {
       canvas.setTextSize(3);
-      canvas.drawString("no data", x + 100, y + 70);
-   } else if (timeSpan.totalseconds() < 60 * 60) {
+      canvas.drawString("switched off", x + 100, y + 70);
+   } else if (timeSpan.totalseconds() > 60 * 60) {
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 100, y + 70);
    } else {
@@ -497,7 +501,7 @@ void SolarDisplay::DrawGridArrow(int x, int y, int dx, int dy)
 {
    DrawIcon(x, y + 48, (uint16_t *) image_data_LineLeftRight, 110, 4);
    canvas.setTextSize(3);
-   if (myData.bmv.relay == "OFF" || myData.tasmotaElite.voltage == 0) {
+   if (myData.bmv.relay == "OFF" || myData.tasmotaElite.alive == "false") {
       canvas.drawString("ON", x + 35, y + 13);
       DrawIcon(x + 16, y + 68, (uint16_t *) image_data_ArrowLeft, 70, 15);
    } else {
@@ -538,7 +542,7 @@ void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
    } else if (myData.mppt.lastChange == EmptyDateTime) {
       canvas.setTextSize(3);
       canvas.drawString("no data", x + 300, y + 70);
-   } else if (timeSpan.totalseconds() < 60 * 60) {
+   } else if (timeSpan.totalseconds() > 60 * 60) {
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 300, y + 70);
    } else {
@@ -564,7 +568,7 @@ void SolarDisplay::DrawBody(int x, int y, int dx, int dy)
    canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
 
    DrawBatteryInfo    (x +  10, y +  10, 250, 166);
-   DrawSolarSymbol    (x + 300, y +  35, 100, 100);
+   DrawSolarSymbol    (x + 276, y +  30, 150, 150);
    DrawSolarArrow     (x + 346, y + 140,  50,  50);
    DrawGridInfo       (x + 436, y +  10, 486, 166);
    DrawBatterySymbol  (x +  96, y + 196,  60, 100);

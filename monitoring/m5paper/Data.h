@@ -128,6 +128,7 @@ public:
    double      ampere;       //!< grid power consumption
    double      power;        //!< consumption
    DateTime    lastChange;   //!< Last change of the data
+   String      alive;        //!< Switched on or off
 
    HistoryData powerHistory; //!< Grid power history
    HistoryData yieldHistory; //!< Grid power history

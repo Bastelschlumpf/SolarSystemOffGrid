@@ -101,6 +101,27 @@ time_t GetRTCTime()
   return makeTime(tmSet);
 }
 
+/* UTC date to local time. */
+time_t UtcToLocalTime(time_t utcTime)
+{
+   struct tm *tm = localtime(&utcTime);
+
+   if (tm) {
+      tmElements_t tmSet;
+
+      tmSet.Year   = tm->tm_year + 1900 - 1970;
+      tmSet.Month  = tm->tm_mon + 1;
+      tmSet.Day    = tm->tm_mday;
+      tmSet.Hour   = tm->tm_hour;
+      tmSet.Minute = tm->tm_min;
+      tmSet.Second = tm->tm_sec;
+  
+      return makeTime(tmSet);
+   }
+   Serial.println("!!! Error on UtcToLocalTime() !!!");
+   return utcTime;
+}
+
 /* Convert the date part of the RTC timestamp */
 String getRTCDateString() 
 {
@@ -220,7 +241,7 @@ String Trim(String string, String Chars)
 {
    String ret;
 
-   for (int i = 0; i < string.length() - 1; i++) {
+   for (int i = 0; i < string.length(); i++) {
       if (Chars.indexOf(string[i]) < 0) {
          ret += string[i];
       }

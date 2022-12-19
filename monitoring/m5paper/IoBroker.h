@@ -226,6 +226,7 @@ bool IoBrokerPlain::getPlainValue(String &value, String topic)
 /* Convert the string request to double. */
 bool IoBrokerPlain::getPlainValue(double &value, String topic)
 {
+   value = 0.0;
    if (sendRequest(IOBROKER_GET_PLAIN, topic)) {
       value = plainString_.toDouble();
       Serial.println("   plainValue: " + String(value));
@@ -279,7 +280,7 @@ bool IoBrokerValue::getLastChange(DateTime &dateTime, String topic)
 {
    dateTime = EmptyDateTime;
    if (sendRequest(IOBROKER_GET, topic)) {
-      String lcPart  = "\"lc\":";
+      String lcPart  = "\"ts\":";
       int    lcIndex = jsonData_.indexOf(lcPart);
 
       if (lcIndex >= 0) {
@@ -288,8 +289,8 @@ bool IoBrokerValue::getLastChange(DateTime &dateTime, String topic)
          if (lcIndexEnd >= 0) {
             String timestamp = jsonData_.substring(lcIndex + lcPart.length(), lcIndexEnd - 3); // no milliseconds
 
-            dateTime = DateTime(timestamp.toInt());
-            Serial.printf("   get lc:: %d-%d-%d %d:%d:%d\n", dateTime.year(), dateTime.month(), dateTime.day(), dateTime.hour(), dateTime.minute(), dateTime.second());
+            dateTime = UtcToLocalTime(timestamp.toInt());
+            Serial.printf("   get lc: %d-%d-%d %d:%d:%d\n", dateTime.year(), dateTime.month(), dateTime.day(), dateTime.hour(), dateTime.minute(), dateTime.second());
             return true;
          }
       }
@@ -444,8 +445,8 @@ void GetIoBrokerValues(MyData &myData)
    IoBrokerWifiClient  ioBrokerWifiClient;
    IoBrokerPlain       ioBrokerPlain            (ioBrokerWifiClient);
    IoBrokerValue       ioBrokerValue            (ioBrokerWifiClient);
-   IoBrokerHistory     ioBrokerPPVHistory       (ioBrokerWifiClient, myData.mppt.ppvHistory,           30);                       // 30 days
-   IoBrokerHistory     ioBrokerPPVYieldHistory  (ioBrokerWifiClient, myData.mppt.yieldHistory,         30, IoBrokerHistory::MAX); // 30 days
+   IoBrokerHistory     ioBrokerPPVHistory       (ioBrokerWifiClient, myData.mppt.ppvHistory,           21);                       // 21 days
+   IoBrokerHistory     ioBrokerPPVYieldHistory  (ioBrokerWifiClient, myData.mppt.yieldHistory,         21, IoBrokerHistory::MAX); // 21 days
    IoBrokerHistory     ioBrokerGridHistory      (ioBrokerWifiClient, myData.tasmotaElite.powerHistory,  7, IoBrokerHistory::MAX); //  7 days
    IoBrokerHistory     ioBrokerGridYieldHistory (ioBrokerWifiClient, myData.tasmotaElite.yieldHistory,  7, IoBrokerHistory::MAX); //  7 days
 
@@ -483,6 +484,7 @@ void GetIoBrokerValues(MyData &myData)
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.voltage,           "sonoff.0.TasmotaElite.ENERGY_Voltage");
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.ampere,            "sonoff.0.TasmotaElite.ENERGY_Current");
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.power,             "sonoff.0.TasmotaElite.ENERGY_Power");
+   ioBrokerPlain.getPlainValue(myData.tasmotaElite.alive,             "sonoff.0.TasmotaElite.alive");
    ioBrokerValue.getLastChange(myData.tasmotaElite.lastChange,        "sonoff.0.TasmotaElite.ENERGY_Voltage");
 
    ioBrokerGridHistory.getHistoryValues      ("sonoff.0.TasmotaElite.ENERGY_Power");
