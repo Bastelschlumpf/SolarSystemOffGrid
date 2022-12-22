@@ -10,3 +10,4 @@ Monitor
 ok - BMV-Alarm auswerten und anzeigen (AR, Alarm)
 ok - Beschreibung der Monitoranzeige (Mit tabelle der angezeigten Werte)
 - Auschalten des Inverters funktioniert bei der Anzeige nicht.
+- M5Paper Bild neu machen
