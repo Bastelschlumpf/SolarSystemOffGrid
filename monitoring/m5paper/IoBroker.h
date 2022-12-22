@@ -409,8 +409,8 @@ bool IoBrokerHistory::getHistoryValues(String topic, float factor /*= 1.0*/)
    historyData_.clear();
 
    // Calculate the from and to dates (4 weeks ago and tomorrow) and format these as a query param.
-   toDate_   = toDay   + TimeSpan(    0, 12, 0, 0);
-   fromDate_ = toDate_ - TimeSpan(days_,  0, 0, 0);
+   toDate_   = toDay   + TimeSpan(    1, 0, 0, 0);
+   fromDate_ = toDate_ - TimeSpan(days_, 0, 0, 0);
    param     = "?dateFrom=" + String(fromDate_.year()) + "-" + String(fromDate_.month()) + "-" + String(fromDate_.day()) + 
                "&dateTo="   + String(toDate_.year())   + "-" + String(toDate_.month())   + "-" + String(toDate_.day());
 
