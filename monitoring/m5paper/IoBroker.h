@@ -412,7 +412,8 @@ bool IoBrokerHistory::getHistoryValues(String topic, float factor /*= 1.0*/)
    toDate_   = toDay   + TimeSpan(    1, 0, 0, 0);
    fromDate_ = toDate_ - TimeSpan(days_, 0, 0, 0);
    param     = "?dateFrom=" + String(fromDate_.year()) + "-" + String(fromDate_.month()) + "-" + String(fromDate_.day()) + 
-               "&dateTo="   + String(toDate_.year())   + "-" + String(toDate_.month())   + "-" + String(toDate_.day());
+               "&dateTo="   + String(toDate_.year())   + "-" + String(toDate_.month())   + "-" + String(toDate_.day())   +
+               "&count="    + String(200000);
 
    // Initialize the right time to the array positions.
    int fromUnixTime = fromDate_.unixtime();                    
