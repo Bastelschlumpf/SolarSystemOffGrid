@@ -60,15 +60,19 @@ void SetupWifi()
 
    WiFi.begin(WIFI_SID, WIFI_PW);
 
-   while (WiFi.status() != WL_CONNECTED) {
+   // Wait max 10 seconds for connection
+   for (int i = 0; WiFi.status() != WL_CONNECTED && i < 20; i++) {  
       delay(500);
       Serial.print(".");
    }
-
    Serial.println("");
-   Serial.println("WiFi connected");
-   Serial.println("IP address: ");
-   Serial.println(WiFi.localIP());
+   if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("WiFi connection failed!!!");
+   } else {
+      Serial.println("WiFi connected");
+      Serial.println("IP address: ");
+      Serial.println(WiFi.localIP());
+   }
 }
 
 /** Set the MQQT server */
@@ -77,11 +81,16 @@ void SetupMqqt()
    pubSubClient.setServer(MQTT_SERVER, MQTT_PORT);
 }
 
-/** Checks the mqqt connection and connect if needed. */
+/** Checks the wifi and mqqt connection and connect if needed. */
 void Reconnect() 
 {
-  // Loop until we're reconnected
-   while (!pubSubClient.connected()) {
+   // Reconnect WiFi if needed
+   if (WiFi.status() != WL_CONNECTED) {
+      WiFi.reconnect();
+   }
+   
+   // Loop until we're reconnected (5 retries)
+   for (int i = 0; !pubSubClient.connected() && i < 5; i++) {  
       Serial.print("Attempting MQTT connection...");
       // Attempt to connect
       // If you do not want to use a username and password, change next line to
@@ -95,6 +104,9 @@ void Reconnect()
          // Wait 5 seconds before retrying
          delay(5000);
       }
+   }
+   if (!pubSubClient.connected()) {
+      Serial.println("MQTT failed!!!");
    }
 }
 
