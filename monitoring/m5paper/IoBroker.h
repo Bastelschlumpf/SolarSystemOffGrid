@@ -374,27 +374,29 @@ void IoBrokerHistory::parsValue(String valueString)
             String value     = valueString.substring(0, sep);
             String timestamp = valueString.substring(sep + 1, valueString.length() - 3); // no milliseconds
 
-            DateTime jsonDate(timestamp.toInt());
-
-            int historyIndex = (double) historyData_.size_ / (double) (toDate_.secondstime() - fromDate_.secondstime()) * (double) (jsonDate.secondstime() - fromDate_.secondstime());
-
-            if (historyIndex >= 0 && historyIndex < historyData_.size_) {
-               if (historyData_.max_ < value.toFloat()) {
-                  historyData_.max_ = value.toFloat();
-               }
-               if (eHistoryType_ == AVG) {
-                  historyData_.values_[historyIndex] += value.toFloat();
-                  historyData_.counts_[historyIndex]++;
-               } else { // MAX
-                  if (value.toFloat() > historyData_.values_[historyIndex]) {
-                     historyData_.values_[historyIndex] = value.toFloat();
+            if (value != "null" && timestamp != "null") {
+               DateTime jsonDate(timestamp.toInt());
+   
+               int historyIndex = (double) historyData_.size_ / (double) (toDate_.secondstime() - fromDate_.secondstime()) * (double) (jsonDate.secondstime() - fromDate_.secondstime());
+   
+               if (historyIndex >= 0 && historyIndex < historyData_.size_) {
+                  if (historyData_.max_ < value.toFloat()) {
+                     historyData_.max_ = value.toFloat();
                   }
-                  historyData_.counts_[historyIndex] = 1;
+                  if (eHistoryType_ == AVG) {
+                     historyData_.values_[historyIndex] += value.toFloat();
+                     historyData_.counts_[historyIndex]++;
+                  } else { // MAX
+                     if (value.toFloat() > historyData_.values_[historyIndex]) {
+                        historyData_.values_[historyIndex] = value.toFloat();
+                     }
+                     historyData_.counts_[historyIndex] = 1;
+                  }
+               } else {
+                  Serial.printf("\nWrong history index! [%f] Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
                }
-            } else {
-               Serial.println("Wrong history index! [" + String(historyIndex) + ']');
+               // Serial.printf("**** Index: %d Value: %f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
             }
-            // Serial.printf("**** Index: %d Value: %f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
          }
       }
    }
@@ -409,10 +411,12 @@ bool IoBrokerHistory::getHistoryValues(String topic, float factor /*= 1.0*/)
    historyData_.clear();
 
    // Calculate the from and to dates (4 weeks ago and tomorrow) and format these as a query param.
-   toDate_   = toDay   + TimeSpan(    1, 0, 0, 0);
+   toDate_   = toDay   + TimeSpan(    0, 3, 0, 0);
    fromDate_ = toDate_ - TimeSpan(days_, 0, 0, 0);
    param     = "?dateFrom=" + String(fromDate_.year()) + "-" + String(fromDate_.month()) + "-" + String(fromDate_.day()) + 
+                              "T" + String(fromDate_.hour()) + ":" + String(fromDate_.minute()) + ":" + String(fromDate_.second()) + "Z" +
                "&dateTo="   + String(toDate_.year())   + "-" + String(toDate_.month())   + "-" + String(toDate_.day())   +
+                              "T" + String(toDate_.hour()) + ":" + String(toDate_.minute()) + ":" + String(toDate_.second()) + "Z" +
                "&count="    + String(200000);
 
    // Initialize the right time to the array positions.

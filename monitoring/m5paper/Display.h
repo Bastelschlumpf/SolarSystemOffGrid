@@ -312,7 +312,8 @@ void SolarDisplay::DrawHeadRSSI(int x, int y)
 {
    int iQuality = WifiGetRssiAsQualityInt(myData.wifiRSSI);
 
-   canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", x - 43, y - 14);
+   canvas.drawRightString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", x - 2, y - 14, 1);
+   
    if (iQuality >= 80) DrawCircle(x + 12, y, 16, M5EPD_Canvas::G15, 225, 315); 
    if (iQuality >= 40) DrawCircle(x + 12, y, 12, M5EPD_Canvas::G15, 225, 315); 
    if (iQuality >= 20) DrawCircle(x + 12, y,  8, M5EPD_Canvas::G15, 225, 315); 
@@ -331,7 +332,7 @@ void SolarDisplay::DrawHeadBattery(int x, int y)
          break;
       }
    }
-   canvas.drawString(String(myData.batteryCapacity) + "%", x - 45, y + 1);
+   canvas.drawRightString(String(myData.batteryCapacity) + "%", x - 2, y + 1, 1);
 }
 
 /* Draw all the information about the battery status. */
@@ -558,7 +559,7 @@ void SolarDisplay::DrawHead(int x, int y, int dx, int dy)
 {
    DrawHeadVersion  (x + 5,         y + 13);
    DrawHeadUpdated( (x + (dx / 2)), y + 13);
-   DrawHeadRSSI     (x + dx - 133,  y + 26);
+   DrawHeadRSSI     (x + dx - 130,  y + 26);
    DrawHeadBattery  (x + dx -  49,  y + 11);
 }
 
