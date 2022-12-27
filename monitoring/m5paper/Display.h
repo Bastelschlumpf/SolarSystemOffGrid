@@ -382,8 +382,8 @@ void SolarDisplay::DrawSolarSymbol(int x, int y, int dx, int dy)
    DrawIcon(x, y, (uint16_t *) image_data_SolarIcon, 150, 150);
 
    canvas.setTextSize(3);
-   canvas.drawCentreString(String(myData.mppt.panelPower, 0)      + "W",  x + 77, y + 13, 1);
-   canvas.drawCentreString(String(myData.mppt.yieldToday * 10, 0) + "Wh", x + 87, y + 45, 1);
+   canvas.drawRightString(String(myData.mppt.panelPower, 0)      + "W ", x + dx, y + 13, 1);
+   canvas.drawRightString(String(myData.mppt.yieldToday * 10, 0) + "Wh", x + dx, y + 45, 1);
    canvas.setTextSize(2);
 }
 
