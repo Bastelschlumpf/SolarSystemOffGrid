@@ -162,6 +162,18 @@ String getDateTimeString(time_t rawtime)
    return (String) buff;
 }
 
+/* Convert the time_t to the DD.MM.YYYY HH:MM:SS format */
+String getIoBrokerDateTimeString(DateTime dateTime)
+{
+   char buff[40];
+   
+   sprintf(buff,"%04d-%02d-%02dT%02d:%02d:%02dZ",
+      dateTime.year(), dateTime.month(),  dateTime.day(),
+      dateTime.hour(), dateTime.minute(), dateTime.second());
+
+   return (String) buff;
+}
+
 /* Convert the time_t to the date part DD.MM.YYYY */
 String getDateString(time_t rawtime)
 {

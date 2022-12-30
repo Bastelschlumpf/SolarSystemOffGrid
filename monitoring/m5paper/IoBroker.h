@@ -393,7 +393,7 @@ void IoBrokerHistory::parsValue(String valueString)
                      historyData_.counts_[historyIndex] = 1;
                   }
                } else {
-                  Serial.printf("\nWrong history index! [%f] Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
+                  Serial.printf("\nWrong history index! [%d] [%f] Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
                }
                // Serial.printf("**** Index: %d Value: %f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
             }
@@ -413,10 +413,8 @@ bool IoBrokerHistory::getHistoryValues(String topic, float factor /*= 1.0*/)
    // Calculate the from and to dates (4 weeks ago and tomorrow) and format these as a query param.
    toDate_   = toDay   + TimeSpan(    0, 3, 0, 0);
    fromDate_ = toDate_ - TimeSpan(days_, 0, 0, 0);
-   param     = "?dateFrom=" + String(fromDate_.year()) + "-" + String(fromDate_.month()) + "-" + String(fromDate_.day()) + 
-                              "T" + String(fromDate_.hour()) + ":" + String(fromDate_.minute()) + ":" + String(fromDate_.second()) + "Z" +
-               "&dateTo="   + String(toDate_.year())   + "-" + String(toDate_.month())   + "-" + String(toDate_.day())   +
-                              "T" + String(toDate_.hour()) + ":" + String(toDate_.minute()) + ":" + String(toDate_.second()) + "Z" +
+   param     = "?dateFrom=" + getIoBrokerDateTimeString(fromDate_) +
+               "&dateTo="   + getIoBrokerDateTimeString(toDate_)   +
                "&count="    + String(200000);
 
    // Initialize the right time to the array positions.
@@ -484,7 +482,7 @@ void GetIoBrokerValues(MyData &myData)
 
    ioBrokerPPVHistory.getHistoryValues      ("mqtt.0.mppt.PPV");
    ioBrokerPPVYieldHistory.getHistoryValues ("mqtt.0.mppt.H22", 0.01);
-   myData.mppt.yieldHistory.max_ = 2.0; // Max yield to 2 kWh
+   myData.mppt.yieldHistory.max_ = 3.0; // Max yield to 3 kWh
 
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.voltage,           "sonoff.0.TasmotaElite.ENERGY_Voltage");
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.ampere,            "sonoff.0.TasmotaElite.ENERGY_Current");
