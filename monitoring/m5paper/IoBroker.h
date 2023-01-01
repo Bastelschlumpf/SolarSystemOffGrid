@@ -448,6 +448,7 @@ void GetIoBrokerValues(MyData &myData)
    IoBrokerWifiClient  ioBrokerWifiClient;
    IoBrokerPlain       ioBrokerPlain            (ioBrokerWifiClient);
    IoBrokerValue       ioBrokerValue            (ioBrokerWifiClient);
+   IoBrokerHistory     ioBrokerChargeHistory    (ioBrokerWifiClient, myData.bmv.chargeHistory,         21);                       // 21 days
    IoBrokerHistory     ioBrokerPPVHistory       (ioBrokerWifiClient, myData.mppt.ppvHistory,           21);                       // 21 days
    IoBrokerHistory     ioBrokerPPVYieldHistory  (ioBrokerWifiClient, myData.mppt.yieldHistory,         21, IoBrokerHistory::MAX); // 21 days
    IoBrokerHistory     ioBrokerGridHistory      (ioBrokerWifiClient, myData.tasmotaElite.powerHistory,  7, IoBrokerHistory::MAX); //  7 days
@@ -467,6 +468,8 @@ void GetIoBrokerValues(MyData &myData)
    ioBrokerPlain.getPlainValue(myData.bmv.timeToGo,                   "mqtt.0.bmv.TTG");
    ioBrokerPlain.getPlainValue(myData.bmv.mainVoltage,                "mqtt.0.bmv.V");
    ioBrokerValue.getLastChange(myData.bmv.lastChange,                 "mqtt.0.bmv.V");
+
+   ioBrokerChargeHistory.getHistoryValues("mqtt.0.bmv.SOC");
 
    ioBrokerPlain.getPlainValue(myData.mppt.stateOfOperation,          "mqtt.0.mppt.CS");
    ioBrokerPlain.getPlainValue(myData.mppt.yieldTotal,                "mqtt.0.mppt.H19");

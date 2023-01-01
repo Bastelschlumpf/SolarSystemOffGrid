@@ -37,7 +37,7 @@ protected:
 protected:
    void   DrawCircle            (int32_t x, int32_t y, int32_t r, uint32_t color, int32_t degFrom = 0, int32_t degTo = 360);
    void   DrawIcon              (int x, int y, const uint16_t *icon, int dx = 64, int dy = 64, bool highContrast = false);
-   void   DrawGraph             (int x, int y, int dx, int dy, HistoryData &powerHistory, HistoryData &yieldHistory);
+   void   DrawGraph             (int x, int y, int dx, int dy, HistoryData &powerHistory, HistoryData &yieldHistory, HistoryData *chargeHistory = NULL);
    String FormatString          (String format, double data, int fillLen = 8);
    String StateOfOperation      (int value);
    String BmvAlarmReason        (int value);   
@@ -102,7 +102,7 @@ void SolarDisplay::DrawIcon(int x, int y, const uint16_t *icon, int dx /*= 64*/,
 }
 
 /* Draw a graph with x- and y-axis and values */
-void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHistory, HistoryData &yieldHistory)
+void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHistory, HistoryData &yieldHistory, HistoryData *chargeHistory /*= NULL*/)
 {
    String yMinString  = "0"                          + powerHistory.unitName_;
    String yMaxString1 = String(powerHistory.max_, 0) + powerHistory.unitName_;
@@ -161,6 +161,32 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
          if (i > 0) {
             canvas.drawLine(xPos, graphY + graphDY, xPos, yPos, M5EPD_Canvas::G15);         
             // Serial.printf("GraphLine: %d %f %d, %d\n", i, yValue, (int) xPos, (int) yPos);
+         }
+      }
+   }
+
+   if (chargeHistory) {
+      float yStep = (float) graphDY / 1000.0;
+      int   xLast = 0;
+      int   yLast = 0;
+      
+      for (int i = 0; i < chargeHistory->size_; i++) {
+         float yValue   = chargeHistory->values_[i];
+         float yValueDY = (float) graphDY / (float) 1000.0;
+         float xPos     = (float) graphX + graphDX / (float) chargeHistory->size_ * i;
+         float yPos     = (float) graphY + graphDY - (float) (yValue) * yValueDY;
+   
+         if (yPos > graphY + graphDY) yPos = graphY + graphDY;
+         if (yPos < graphY)           yPos = graphY;
+   
+         if (yValue && xPos && yPos && xLast && yLast) {
+            canvas.drawLine(xLast, yLast - 0, xPos, yPos - 0, M5EPD_Canvas::G8);         
+            canvas.drawLine(xLast, yLast - 1, xPos, yPos - 1, M5EPD_Canvas::G8);         
+            //Serial.printf("GraphLine: %d %f %d %d %d %d\n", i, yValue, (int) xLast, (int) yLast, (int) xPos, (int) yPos);
+         }
+         if (yValue && xPos && yPos) {
+            xLast = xPos;
+            yLast = yPos;
          }
       }
    }
@@ -547,7 +573,7 @@ void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 300, y + 70);
    } else {
-      DrawGraph(x + 140, y - 5, myData.mppt.ppvHistory.size_, dy, myData.mppt.ppvHistory, myData.mppt.yieldHistory);
+      DrawGraph(x + 140, y - 5, myData.mppt.ppvHistory.size_, dy, myData.mppt.ppvHistory, myData.mppt.yieldHistory, &myData.bmv.chargeHistory);
    }
    canvas.setTextSize(2);
 

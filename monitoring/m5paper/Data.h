@@ -24,8 +24,9 @@
 #include "Utils.h"
 #include <nvs.h>
 
-#define PPV_HISTORY_SIZE  725
-#define GRID_HISTORY_SIZE 320
+#define CHARGE_HISTORY_SIZE 725
+#define PPV_HISTORY_SIZE    725
+#define GRID_HISTORY_SIZE   320
 
 const DateTime EmptyDateTime(2000, 1, 1, 0, 0, 0);
 
@@ -36,22 +37,24 @@ const DateTime EmptyDateTime(2000, 1, 1, 0, 0, 0);
 class BMV
 {
 public:
-   double   consumedAmpHours;           //!< CE (mAh)
-   double   stateOfCharge;              //!< SOC (promille)
-   double   midPointDeviation;          //!< DM (promille)
-   double   numberOfChargeCycles;       //!< H4 
-   double   dischargedEnergy;           //!< H17 (0.01 kWh)
-   double   chargedEnergy;              //!< H18 (0.01 kWh)
-   double   cumulativeAmpHoursDrawn;    //!< H6 (mAh)
-   double   secondsSinceLastFullCharge; //!< H9 (Seconds)
-   double   batteryCurrent;             //!< I (mA)
-   double   instantaneousPower;         //!< P (W)
-   String   relay;                      //!< Relay state (ON | OFF)
-   double   timeToGo;                   //!< TTG (Minutes)
-   double   mainVoltage;                //!< V (mV)
-   double   alarmReason;                //!< Alarm?!
-   DateTime lastChange;                 //!< Last change of the data
-   
+   double      consumedAmpHours;           //!< CE (mAh)
+   double      stateOfCharge;              //!< SOC (promille)
+   double      midPointDeviation;          //!< DM (promille)
+   double      numberOfChargeCycles;       //!< H4 
+   double      dischargedEnergy;           //!< H17 (0.01 kWh)
+   double      chargedEnergy;              //!< H18 (0.01 kWh)
+   double      cumulativeAmpHoursDrawn;    //!< H6 (mAh)
+   double      secondsSinceLastFullCharge; //!< H9 (Seconds)
+   double      batteryCurrent;             //!< I (mA)
+   double      instantaneousPower;         //!< P (W)
+   String      relay;                      //!< Relay state (ON | OFF)
+   double      timeToGo;                   //!< TTG (Minutes)
+   double      mainVoltage;                //!< V (mV)
+   double      alarmReason;                //!< Alarm?!
+   DateTime    lastChange;                 //!< Last change of the data
+
+   HistoryData chargeHistory;              //!< SOC charge statistic
+
 public:
    BMV()
       : consumedAmpHours(0.0)
@@ -69,6 +72,7 @@ public:
       , mainVoltage(0.0)
       , alarmReason(0.0)
       , lastChange(EmptyDateTime)
+      , chargeHistory(CHARGE_HISTORY_SIZE, "%")
    {}
    
    void Dump();
