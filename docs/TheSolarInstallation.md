@@ -2,7 +2,7 @@
 ### Pictures of the solar installation
 
    Solar panels.  
-   These are cheap china testing modules. It will be replaced by 6 x Meyer Burger 380Wp panels later.
+   The final 6 xMeyer Burger solar panels.
    ![Solar panels](../images/SolarPanels.jpg "Solar panels")
 
    Surge protection and solar panel main switch.  

@@ -47,7 +47,7 @@ Here is the description of each area.
 |                                    | The delivered current of the solar panels |
 |                                    | The current battery charging voltage |
 |                                    | The current battery charging current |
-|<span style="color: red"> 16 </span>| Statistical data of the charge controller in watts and kWh |
+|<span style="color: red"> 16 </span>| Statistical data of the charge controller in watts and kWh and the battery charge. |
 
 ### Wall mount
 
