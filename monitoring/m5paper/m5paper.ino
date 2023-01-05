@@ -15,7 +15,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-  * @file Weather.h
+  * @file m5paper.ino
   * 
   * Main file with setup() and loop()
   */
@@ -45,7 +45,9 @@ void setup()
 {
    // Serial default speed 115200
    InitEPD(true);
-   if (StartWiFi(myData.wifiRSSI)) {
+   if (!StartWiFi(myData.wifiRSSI)) {
+      myDisplay.ShowWiFiError(WIFI_SSID);
+   } else {
       UpdateRTCFromNTP();
       GetBatteryValues(myData);
       GetSHT30Values(myData);

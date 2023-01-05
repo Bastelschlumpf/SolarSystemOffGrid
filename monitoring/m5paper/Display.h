@@ -71,6 +71,7 @@ public:
    }
 
    void Show();
+   void ShowWiFiError(String ssid);
 };
 
 /* Draw a circle with optional start and end point */
@@ -328,7 +329,7 @@ void SolarDisplay::DrawHeadVersion(int x, int y)
 /* Draw the information when are these data updated. */
 void SolarDisplay::DrawHeadUpdated(int x, int y)
 {
-   String updatedString = "Updated " + getRTCDateString() + " " + getRTCTimeString();
+   String updatedString = "Updated " + getDateTimeString(GetRTCTime());
    
    canvas.drawCentreString(updatedString, x, y, 1);
 }
@@ -616,10 +617,27 @@ void SolarDisplay::Show()
    canvas.setTextSize(2);
    canvas.setTextColor(WHITE, BLACK);
    canvas.setTextDatum(TL_DATUM);
-   canvas.createCanvas(960, 540);
+   canvas.createCanvas(maxX, maxY);
 
    DrawHead(14,  0, maxX - 28, 33);
    DrawBody(14, 34, maxX - 28, maxY - 45);
+
+   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+   delay(2000);
+}
+
+/* Show WiFi connewction error. */
+void SolarDisplay::ShowWiFiError(String ssid)
+{
+   Serial.println("SolarDisplay::ShowWiFiError");
+
+   canvas.setTextSize(4);
+   canvas.setTextColor(WHITE, BLACK);
+   canvas.setTextDatum(TL_DATUM);
+   canvas.createCanvas(maxX, maxY);
+
+   String errMsg = "WiFi error: [" + ssid + "]";
+   canvas.drawCentreString(errMsg, maxX / 2, maxY / 2, 1);
 
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
    delay(2000);
