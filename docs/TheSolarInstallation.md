@@ -16,3 +16,8 @@
 
    Solar installation with battery pack
    ![Solar plant](../images/SolarPlant.png "Solar plant")
+
+   Solar Circuit Breaker Cover Box
+   The circuit breaker needs a touch-proof cover
+   ![Breaker Box](../images/CircuitBrakeBox.png "Circuit Breaker Box")
+

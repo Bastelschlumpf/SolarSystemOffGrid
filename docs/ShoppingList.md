@@ -14,7 +14,8 @@ Here are some sample shopping items. Please check the details if everything is c
 |1 x surge protection Weidmüller | 400€ | |
 |1 x Sonoff POW320D Elite | 45€ | https://www.amazon.de/gp/product/B09XB3RZB9/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1 |
 |2 x Heavy duty bus bar | 40€ | https://www.amazon.de/gp/product/B09H6FSTW9/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1 |
-|2 x Battery switch | 20€ | https://www.amazon.de/gp/product/B095JN7QHB/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1|
+|1 x Battery switch | 20€ | https://www.amazon.de/gp/product/B095JN7QHB/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1|
+|1 x Circuit Braker Solar | 40€ | https://www.amazon.de/dp/B0BGPHJG3K?ref=ppx_yo2ov_dt_b_product_details&th=1 |
 |1 x Fuse | 12€ | https://www.amazon.de/gp/product/B0B7LGFT7Z/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1|
 |1 x FI circuit breaker | 30€ | https://www.amazon.de/gp/product/B001L5SLP4/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1|
 |2 x Eltako switching relay, 2 changeover contacts  | 40€ | https://www.amazon.de/gp/product/B000UWEXE2/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1|
