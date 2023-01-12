@@ -46,7 +46,7 @@
    ![BridgeBox](./mqqtbridge/circuit/BridgeBox.png "BridgeBox")
   * [See Victron to IoBroker MQQT Bridge](docs/VictronMQQTBridge.md)
 
-### Status display via  E-Ink display (M5Paper)
+### Wall mounted status display via  E-Ink display (M5Paper)
    ![Circuit](./images/M5Paper.png "M5Paper")
   * [See Status display](docs/StatusDisplay.md)
 

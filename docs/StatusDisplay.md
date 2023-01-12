@@ -54,7 +54,7 @@ Here is the description of each area.
 And here the whole thing with a wall mount made by 3D printing
 
    See https://www.thingiverse.com/thing:4767014  
-   ![Wall mount](../images/M5PaperWallMount.png "WallMount")
+   ![Wall mount](../images/M5Paper.png "WallMount")
 
 ### Inplate 6 Plus version
 
