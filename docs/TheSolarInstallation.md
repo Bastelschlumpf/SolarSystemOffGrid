@@ -3,7 +3,7 @@
 
    Solar panels.  
    The final 6 xMeyer Burger solar panels.
-   ![Solar panels](../images/SolarPanels.jpg "Solar panels")
+   ![Solar panels](../images/SolarPanels.png "Solar panels")
 
    Surge protection and solar panel main switch.  
    ![SurgeProtection](../images/SurgeProtection.png "Surge protection")
@@ -16,6 +16,7 @@
 
    Solar installation with battery pack
    ![Solar plant](../images/SolarPlant.png "Solar plant")
+   ![Solar plant 2](../images/SolarPlant2.png "Solar plant 2")
 
    Solar Circuit Breaker Cover Box
    The circuit breaker needs a touch-proof cover

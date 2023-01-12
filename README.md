@@ -28,10 +28,11 @@
    ![Circuit](images/Circuit.png "Figure 2")
 
    Circuit diagram with real components on the control panel
-   ![Circuit on the control panel](images/SolarPlant.png "Solar plant")
+   ![Circuit on the control panel](images/SolarPlant.png "Solar plant")  
+   Manuals of the components: See manuals folder
 
 ### Pictures of the solar panels and installation
-   ![Solar panels](./images/SolarPanels.jpg "Solar panels")
+   ![Solar panels](./images/SolarPanels.png "Solar panels")
 
   * [See pictures of the installation](docs/TheSolarInstallation.md)
 
