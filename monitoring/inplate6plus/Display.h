@@ -668,7 +668,7 @@ void SolarDisplay::Show()
    DrawBody(14, 34, maxX - 28, maxY - 45);
 
    display.display();
-   delay(2000);
+   delay(1000);
 }
 
 /* Show WiFi connewction error. */
@@ -683,5 +683,5 @@ void SolarDisplay::ShowWiFiError(String ssid)
    DrawCentreString(errMsg, maxX / 2, maxY / 2);
 
    display.display();
-   delay(2000);
+   delay(1000);
 }
