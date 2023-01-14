@@ -27,6 +27,8 @@
 #define IOBROKER_GET       "/get/"
 #define IOBROKER_GET_PLAIN "/getPlainValue/"
 
+#define REQUEST_TIMEOUT    2000 // msec
+
 class IoBrokerWifiClient; //!< Wifi connection class
 class IoBrokerBase;       //!< Base class for IoBroker communication
 class IoBrokerPlain;      //!< Plain value (double/string) request
@@ -130,6 +132,8 @@ protected:
    IoBrokerWifiClient &wifiClient_; //!< Reference to the IoBroker wifiClient
 
 protected:
+   void parseContentLen(int &len, String line);
+
    virtual void onRequest ()       = 0;
    virtual void onChar    (char c) = 0;
    
@@ -142,6 +146,17 @@ public:
    bool sendRequest(String method, String topic, String param = "");
 };
 
+/* Read the Content-Length header. */
+void IoBrokerBase::parseContentLen(int &len, String line)
+{
+   String lenString = "Content-Length:";
+   int    index     = line.indexOf(lenString);
+   
+   if (index != -1) {
+      len = atoi(line.substring(index + lenString.length()).c_str());
+   }
+}
+
 /* Read a String from IoBroker. */
 bool IoBrokerBase::sendRequest(String method, String topic, String param) 
 {
@@ -149,7 +164,10 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
 
    Serial.print("sendRequest! ");
    if (wifiClient_.connected()) {
-      String url = method + topic + param;
+      int    ticks         = 0;
+      int    readLength    = 0;
+      int    contentLength = -1;
+      String url           = method + topic + param;
             
       // This will send the request to the server
       onRequest();
@@ -161,14 +179,25 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
       // Read http response head
       while (wifiClient_.client_.available()) {
          String line = wifiClient_.client_.readStringUntil('\n');
+         
+         parseContentLen(contentLength, line);
          if (line == "\r") break;
       }    
-      
+
       // Read http response body
-      while (wifiClient_.client_.available()) {
-         onChar((char) wifiClient_.client_.read());
-         ret = true;
-      }
+      ticks = millis();
+      do {
+         if (wifiClient_.client_.available()) {
+            onChar((char) wifiClient_.client_.read());
+            readLength++;
+            ret = true;
+         } else {
+            if (millis() - ticks > REQUEST_TIMEOUT) {
+               Serial.println("IoBrokerBase::sendRequest() -> timeout!");
+               break;
+            }
+         }
+      } while (contentLength == -1 || readLength < contentLength);
       wifiClient_.client_.flush();
       Serial.println(" -> ok");
    }
