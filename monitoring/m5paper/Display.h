@@ -640,5 +640,4 @@ void SolarDisplay::ShowWiFiError(String ssid)
    canvas.drawCentreString(errMsg, maxX / 2, maxY / 2, 1);
 
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   delay(2000);
 }
