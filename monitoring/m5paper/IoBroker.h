@@ -133,6 +133,7 @@ protected:
    void parseContentLen(int &len, String line);
 
    virtual void onRequest ()       = 0;
+   virtual void onBody    () { }
    virtual void onChar    (char c) = 0;
    
 public:
@@ -155,6 +156,9 @@ void IoBrokerBase::parseContentLen(int &len, String line)
    }
 }
 
+int _contentLength = 0;
+String _url;
+
 /* Read a String from IoBroker. */
 bool IoBrokerBase::sendRequest(String method, String topic, String param) 
 {
@@ -166,6 +170,8 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
       int    readLength    = 0;
       int    contentLength = -1;
       String url           = method + topic + param;
+
+_url = topic;
             
       // This will send the request to the server
       onRequest();
@@ -182,15 +188,20 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
          if (line == "\r") break;
       }    
 
+_contentLength = contentLength;
+
       // Read http response body
+      onBody();
       ticks = millis();
       do {
          if (wifiClient_.client_.available()) {
             onChar((char) wifiClient_.client_.read());
+            ticks = millis();
             readLength++;
             ret = true;
          } else {
             if (millis() - ticks > REQUEST_TIMEOUT) {
+               _MsgList.addTail("IoBrokerBase::sendRequest() -> timeout!");
                Serial.println("IoBrokerBase::sendRequest() -> timeout!");
                break;
             }
@@ -347,6 +358,7 @@ protected:
 
 protected:
    virtual void onRequest ();
+   virtual void onBody    ();
    virtual void onChar    (char c);
 
    void parsValue(String valueString);
@@ -370,15 +382,32 @@ public:
    bool getHistoryValues(String topic, float factor = 1.0);
 };
 
+int hist = 0;
+int err  = 0;
+int byt  = 0;
+
 /* The request has started. */
 void IoBrokerHistory::onRequest()
 {
    valueString_ = "";
 }
 
+/* The request has started. */
+void IoBrokerHistory::onBody()
+{
+   hist = 0;
+   err = 0;
+   byt = 0;
+
+   _MsgList.addTail(StringPrintf("url: %s\n", _url.c_str()));
+   _MsgList.addTail(StringPrintf("contentLength: %d\n", _contentLength));
+   
+}
+
 /* Add every char to the valueString and start parsing at the end of one data item. */
 void IoBrokerHistory::onChar(char c)
 {
+   byt++;
    if (c == '[') {
       valueStart_  = true;
       valueString_ = "";
@@ -409,6 +438,7 @@ void IoBrokerHistory::parsValue(String valueString)
                int historyIndex = (double) historyData_.size_ / (double) (toDate_.secondstime() - fromDate_.secondstime()) * (double) (jsonDate.secondstime() - fromDate_.secondstime());
    
                if (historyIndex >= 0 && historyIndex < historyData_.size_) {
+                  hist++;
                   if (historyData_.max_ < value.toFloat()) {
                      historyData_.max_ = value.toFloat();
                   }
@@ -422,6 +452,7 @@ void IoBrokerHistory::parsValue(String valueString)
                      historyData_.counts_[historyIndex] = 1;
                   }
                } else {
+                  err++;
                   Serial.printf("\nWrong history index! [%d] [%f] Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
                }
                // Serial.printf("**** Index: %d Value: %f Timestamp: %d-%d-%d %d:%d:%d\n", historyIndex, value.toFloat(), jsonDate.year(), jsonDate.month(), jsonDate.day(), jsonDate.hour(), jsonDate.minute(), jsonDate.second());
@@ -455,6 +486,7 @@ bool IoBrokerHistory::getHistoryValues(String topic, float factor /*= 1.0*/)
 
    // Send request, pars on every date item internaly
    if (sendRequest(IOBROKER_QUERY, topic, param)) {
+      _MsgList.addTail(StringPrintf("hist: %d err: %d byt: %d\n", hist, err, byt));
       // average on every data
       for (int i = 0; i < historyData_.size_; i++) {
          if (historyData_.counts_[i] > 0) {

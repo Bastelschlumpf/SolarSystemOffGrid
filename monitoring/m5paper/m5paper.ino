@@ -24,6 +24,7 @@
 #include "RTClib.h"
 #include <TimeLib.h>
 #include <HTTPClient.h>
+#include "StringList.h"
 #include "Config.h"
 #include "ConfigOverride.h" // Remove this line
 #include "Data.h"

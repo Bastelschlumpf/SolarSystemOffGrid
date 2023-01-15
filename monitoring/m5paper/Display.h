@@ -622,6 +622,17 @@ void SolarDisplay::Show()
    DrawHead(14,  0, maxX - 28, 33);
    DrawBody(14, 34, maxX - 28, maxY - 45);
 
+   canvas.fillRect(10, 10, 500, maxY, M5EPD_Canvas::G0);   
+
+   int y = 20;
+   for (int i = 0; i < _MsgList.count(); i++) {
+      String msg = _MsgList.getAt(i);
+
+      canvas.drawString(msg, 20, y);
+      Serial.print(msg);
+      y += 20;
+   }
+
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
    delay(2000);
 }
@@ -640,5 +651,4 @@ void SolarDisplay::ShowWiFiError(String ssid)
    canvas.drawCentreString(errMsg, maxX / 2, maxY / 2, 1);
 
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   delay(2000);
 }
