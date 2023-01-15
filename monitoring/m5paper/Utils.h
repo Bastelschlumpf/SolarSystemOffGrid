@@ -20,6 +20,7 @@
   * A collection of helper functions.
   */
 #pragma once
+#include <stdarg.h>
 #include <Time.h>
 #include <TimeLib.h> 
 
@@ -63,6 +64,19 @@ public:
       max_ = 0.0;
    }
 };
+
+/* Printf to a String */
+String StringPrintf(char *fmt, ... )
+{
+   char buf[255];
+
+   memset(buf, 0, sizeof(buf));
+   va_list args;
+   va_start (args, fmt );
+   vsnprintf(buf, 255, fmt, args);
+   va_end (args);
+   return (String) buf;
+}
 
 /* Convert the RTC date time to DD.MM.YYYY HH:MM:SS */
 String getRTCDateTimeString() 
