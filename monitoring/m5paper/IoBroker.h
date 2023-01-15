@@ -187,6 +187,7 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
       do {
          if (wifiClient_.client_.available()) {
             onChar((char) wifiClient_.client_.read());
+            ticks = millis();
             readLength++;
             ret = true;
          } else {
