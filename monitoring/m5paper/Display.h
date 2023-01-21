@@ -119,11 +119,11 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
    canvas.drawRightString (yMaxString1, x + 53,      graphY - 5,            1);   
    canvas.drawRightString (yMinString,  x + 53,      graphY + graphDY - 12, 1);   
 
-   canvas.drawLine(x + dx + 11, graphY + 20, x + dx + 21, graphY + 20, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx + 11, graphY + 20, x + dx + 11, graphY + 30, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx +  1, graphY + 30, x + dx + 11, graphY + 30, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx + 21, graphY + 20, x + dx + 21, graphY + 25, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx + 21, graphY + 25, x + dx + 31, graphY + 25, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx +  8, graphY + 20, x + dx + 18, graphY + 20, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx +  8, graphY + 20, x + dx +  8, graphY + 30, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx -  2, graphY + 30, x + dx +  8, graphY + 30, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx + 18, graphY + 20, x + dx + 18, graphY + 25, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx + 18, graphY + 25, x + dx + 28, graphY + 25, M5EPD_Canvas::G15);         
 
    canvas.drawRect(graphX, graphY, graphDX, graphDY, M5EPD_Canvas::G15);   
 
@@ -440,10 +440,9 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 100, y + 70);
    } else {
-      canvas.drawString(voltageInfo, x + 14, y + 14);
-      canvas.drawString(ampereInfo,  x + 14, y + 34);
+      canvas.drawCentreString(voltageInfo + ampereInfo, x + dx / 2, y + 8, 1);
 
-      DrawGraph(x + 120, y - 5, myData.tasmotaElite.powerHistory.size_, dy, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
+      DrawGraph(x + 7, y + 5, myData.tasmotaElite.powerHistory.size_, dy - 10, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
    }
    canvas.setTextSize(2);
    

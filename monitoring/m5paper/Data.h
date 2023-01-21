@@ -25,8 +25,8 @@
 #include <nvs.h>
 
 #define CHARGE_HISTORY_SIZE 725
-#define PPV_HISTORY_SIZE    725
-#define GRID_HISTORY_SIZE   320
+#define PPV_HISTORY_SIZE    723
+#define GRID_HISTORY_SIZE   428
 
 const DateTime EmptyDateTime(2000, 1, 1, 0, 0, 0);
 

@@ -25,8 +25,8 @@
 #include "Utils.h"
 
 #define CHARGE_HISTORY_SIZE 775
-#define PPV_HISTORY_SIZE    775
-#define GRID_HISTORY_SIZE   340
+#define PPV_HISTORY_SIZE    785
+#define GRID_HISTORY_SIZE   460
 
 const DateTime EmptyDateTime(2000, 1, 1, 0, 0, 0);
 

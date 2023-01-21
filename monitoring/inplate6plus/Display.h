@@ -116,7 +116,7 @@ void SolarDisplay::DrawRightString(String text, int x, int y)
    uint16_t w  = 0;
    uint16_t h  = 0;
    
-   display.getTextBounds(text.c_str(), x, y, &x1, &y1, &w, &h);
+   display.getTextBounds(text.c_str(), 0, 0, &x1, &y1, &w, &h);
    display.setCursor(x - w, y);
    display.print(text);
 }
@@ -162,15 +162,15 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
    int    graphDY     = dy - 25 - 20;
 
    display.setTextSize(2);
-   DrawString      (yMaxString2, x + dx - 18, graphY - 5);   
+   DrawRightString (yMaxString2, x + dx + 42, graphY - 5);   
    DrawRightString (yMaxString1, x + 53,      graphY - 5);
    DrawRightString (yMinString,  x + 53,      graphY + graphDY - 12);
 
-   display.drawLine(x + dx + 11, graphY + 20, x + dx + 21, graphY + 20, GRAY_0);
-   display.drawLine(x + dx + 11, graphY + 20, x + dx + 11, graphY + 30, GRAY_0);
-   display.drawLine(x + dx +  1, graphY + 30, x + dx + 11, graphY + 30, GRAY_0);
-   display.drawLine(x + dx + 21, graphY + 20, x + dx + 21, graphY + 25, GRAY_0);
-   display.drawLine(x + dx + 21, graphY + 25, x + dx + 31, graphY + 25, GRAY_0);
+   display.drawLine(x + dx +  8, graphY + 20, x + dx + 18, graphY + 20, GRAY_0);
+   display.drawLine(x + dx +  8, graphY + 20, x + dx +  8, graphY + 30, GRAY_0);
+   display.drawLine(x + dx -  2, graphY + 30, x + dx +  8, graphY + 30, GRAY_0);
+   display.drawLine(x + dx + 18, graphY + 20, x + dx + 18, graphY + 25, GRAY_0);
+   display.drawLine(x + dx + 18, graphY + 25, x + dx + 28, graphY + 25, GRAY_0);
 
    display.drawRect(graphX, graphY, graphDX, graphDY, GRAY_0);   
 
@@ -487,10 +487,8 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
       display.setTextSize(3);
       DrawString("no update", x + 100, y + 70);
    } else {
-      DrawString(voltageInfo, x + 14, y + 14);
-      DrawString(ampereInfo,  x + 14, y + 34);
-
-      DrawGraph(x + 120, y - 5, myData.tasmotaElite.powerHistory.size_, dy, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
+      DrawCentreString(voltageInfo + ampereInfo, x + dx / 2, y + 8);
+      DrawGraph(x + 7, y + 5, myData.tasmotaElite.powerHistory.size_, dy - 10, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
    }
    display.setTextSize(2);
    DrawIcon(x + dx - 40, y + dy - 40, (uint16_t *) image_data_HouseIconSmall, 30, 30);
