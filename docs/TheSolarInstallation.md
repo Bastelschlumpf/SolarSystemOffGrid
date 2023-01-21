@@ -18,6 +18,11 @@
    ![Solar plant](../images/SolarPlant.png "Solar plant")
    ![Solar plant 2](../images/SolarPlant2.png "Solar plant 2")
 
+   Thermo images ofv the circuit in action.  
+   ![ThermoImage1](../images/ThermoImage1.jpg "ThermoImage1")
+   ![ThermoImage2](../images/ThermoImage2.jpg "ThermoImage2")
+   ![ThermoImage3](../images/ThermoImage3.jpg "ThermoImage3")
+
    Solar Circuit Breaker Cover Box
    The circuit breaker needs a touch-proof cover
    ![Breaker Box](../images/CircuitBrakeBox.png "Circuit Breaker Box")
