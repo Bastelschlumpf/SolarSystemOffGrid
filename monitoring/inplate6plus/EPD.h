@@ -29,9 +29,11 @@ void InitEPD(bool clearDisplay = true)
    
    display.begin();
 
-   // Turn frontlight on
-   // display.frontlight(1);
-   // display.setFrontlight(50);
+   // Switch on the front lighting briefly so that you can recognize a start.
+   display.frontlight(1);
+   display.setFrontlight(10);
+   delay(100);
+   display.frontlight(0);
 
    if (clearDisplay) {
       display.clearDisplay();
