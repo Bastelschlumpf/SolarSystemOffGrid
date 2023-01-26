@@ -42,7 +42,7 @@
 ### Power consumption monitoring with Tasmota
   * [See Tasmota (Sonoff) Elite 20A](docs/Tasmota.md)
 
-### Victron MQQT Bridge
+### Victron MQQT Bridge to IoBroker
    ![BridgeBox](./mqqtbridge/circuit/BridgeBox.png "BridgeBox")
    IoBroker View: Not beautiful but everything on it  
    ![IoBrokerView](./images/IoBroker.png "IoBrokerView")

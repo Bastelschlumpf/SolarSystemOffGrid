@@ -26,9 +26,11 @@
    I have modified it a bit, I now switch the 3.3V input then I do not have to invert the signal.  
    And I tested the series resistor. It works best with 2k ohms at the optocoupler input and 10k ohms at the ESP32 input
 
-   The data packets arrive in my IoBroker.
-   ![Board2](../mqqtbridge/circuit/IoBroker.png "IoBroker")
-
    The box at the solar installation
    ![BridgeBox](../mqqtbridge/circuit/BridgeBox.png "BridgeBox")
 
+   The data packets arrive in my IoBroker.
+   ![Board2](../mqqtbridge/circuit/IoBroker.png "IoBroker")
+
+   IoBroker View: Not beautiful but everything on it  
+   ![IoBrokerView](../images/IoBroker.png "IoBrokerView")
