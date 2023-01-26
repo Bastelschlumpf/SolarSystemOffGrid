@@ -44,6 +44,8 @@
 
 ### Victron MQQT Bridge
    ![BridgeBox](./mqqtbridge/circuit/BridgeBox.png "BridgeBox")
+   IoBroker View: Not beautiful but everything on it  
+   ![IoBrokerView](./images/IoBroker.png "IoBrokerView")
   * [See Victron to IoBroker MQQT Bridge](docs/VictronMQQTBridge.md)
 
 ### Wall mounted status display via  E-Ink display (M5Paper)
