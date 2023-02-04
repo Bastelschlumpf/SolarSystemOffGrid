@@ -23,8 +23,11 @@
 
 #define VERSION          "Version 1.0"
 
-#define WIFI_SSID        "your wifi ssid"
-#define WIFI_PW          "your wifi password"
+#define WIFI_SSID_1      "your wifi ssid 1"
+#define WIFI_PW_1        "your wifi password 1"
+
+#define WIFI_SSID_2      "your wifi ssid 2"
+#define WIFI_PW_2        "your wifi password 2"
 
 #define IOBROKER_URL     "iobroker.url"
 #define IOBROKER_PORT    8087

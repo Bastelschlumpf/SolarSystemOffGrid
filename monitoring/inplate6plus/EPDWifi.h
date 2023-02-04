@@ -22,6 +22,27 @@
 #pragma once
 #include <WiFi.h>
 
+/* Connect to wifi */
+bool ConnectToWifi(String ssid, String pw) 
+{
+   Serial.print("Connecting to ");
+   Serial.println(ssid);
+   delay(100);
+   
+   WiFi.begin(ssid.c_str(), pw.c_str());
+   for (int retry = 0; WiFi.status() != WL_CONNECTED && retry < 30; retry++) {
+      delay(500);
+      Serial.print(".");
+   }
+   if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("\nWiFi connected at: " + WiFi.localIP().toString());
+      return true;
+   } else {
+      Serial.println("\nWiFi connection *** FAILED ***");
+      return false;
+   }
+}
+
 /* Start and connect to the wifi */
 bool StartWiFi(int &rssi) 
 {
@@ -32,24 +53,11 @@ bool StartWiFi(int &rssi)
    WiFi.setAutoConnect(true);
    WiFi.setAutoReconnect(true);
 
-   Serial.print("Connecting to ");
-   Serial.println(WIFI_SSID);
-   delay(100);
-   
-   WiFi.begin(WIFI_SSID, WIFI_PW);
-
-   for (int retry = 0; WiFi.status() != WL_CONNECTED && retry < 30; retry++) {
-      delay(500);
-      Serial.print(".");
-   }
-
    rssi = 0;
-   if (WiFi.status() == WL_CONNECTED) {
+   if (ConnectToWifi(WIFI_SSID_1, WIFI_PW_1) || ConnectToWifi(WIFI_SSID_2, WIFI_PW_2)) {
       rssi = WiFi.RSSI();
-      Serial.println("WiFi connected at: " + WiFi.localIP().toString());
       return true;
    } else {
-      Serial.println("WiFi connection *** FAILED ***");
       return false;
    }
 }
