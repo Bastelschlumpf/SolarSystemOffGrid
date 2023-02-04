@@ -622,7 +622,7 @@ void SolarDisplay::Show()
    DrawBody(14, 34, maxX - 28, maxY - 45);
 
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   delay(2000);
+   delay(1000);
 }
 
 /* Show WiFi connewction error. */
@@ -639,4 +639,5 @@ void SolarDisplay::ShowWiFiError(String ssid)
    canvas.drawCentreString(errMsg, maxX / 2, maxY / 2, 1);
 
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+   delay(1000);
 }

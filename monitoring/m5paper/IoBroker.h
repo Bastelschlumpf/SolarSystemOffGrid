@@ -79,7 +79,6 @@ bool IoBrokerWifiClient::connect()
       Serial.println(" -> connection failed!");
    } else {
       Serial.println(" -> connected!");
-      delay(100);
    }
 }
 
@@ -147,8 +146,9 @@ public:
 /* Read the Content-Length header. */
 void IoBrokerBase::parseContentLen(int &len, String line)
 {
-   String lenString = "Content-Length:";
-   int    index     = line.indexOf(lenString);
+   static String lenString = "Content-Length:";
+   
+   int index = line.indexOf(lenString);
    
    if (index != -1) {
       len = atoi(line.substring(index + lenString.length()).c_str());
@@ -166,7 +166,7 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
       int    readLength    = 0;
       int    contentLength = -1;
       String url           = method + topic + param;
-            
+
       // This will send the request to the server
       onRequest();
       Serial.print(url);

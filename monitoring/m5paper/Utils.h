@@ -25,6 +25,34 @@
 #include <TimeLib.h> 
 
 /**
+  * Profiling helper class.
+  */
+class CTimeProf
+{
+protected:
+   int    m_iMillis;
+   String m_Info;
+
+public:
+   CTimeProf(String Info)
+      : m_Info(Info)
+      , m_iMillis(millis())
+   {
+      // Serial.printf("[% 8.2f sec %s\n", (float) (m_iMillis / 1000.0), m_Info.c_str());
+   }
+   ~CTimeProf()
+   {
+      int iMillis = millis();
+
+      // if ((float) (iMillis - m_iMillis) / 1000.0 >= 0.02) {
+         Serial.printf("\n***% 2.2f sec [% 2.2f sec] %s\n", (float) (iMillis - m_iMillis) / 1000.0, (float) (iMillis / 1000.0), m_Info.c_str());
+      // }
+   }
+};
+
+#define TIME_PROF(m) CTimeProf TimeProf(m);
+
+/**
   * HistoryData: A collection af history float values with its DateTime position.
   */
 class HistoryData

@@ -34,7 +34,6 @@ bool StartWiFi(int &rssi)
 
    Serial.print("Connecting to ");
    Serial.println(WIFI_SSID);
-   delay(100);
    
    WiFi.begin(WIFI_SSID, WIFI_PW);
 

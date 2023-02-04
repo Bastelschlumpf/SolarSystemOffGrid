@@ -56,7 +56,13 @@ void setup()
       myDisplay.Show();
       StopWiFi();
    }
-   ShutdownEPD(10 * 60); // every 10 minutes
+
+   // Save battery at night.
+   if (myData.mppt.batteryCurrent > 0.0) {
+      ShutdownEPD(15 * 60); // every 15 minutes
+   } else {
+      ShutdownEPD(60 * 60); // every hour
+   }
 }
 
 /* Main loop. Never reached because of shutdown */
