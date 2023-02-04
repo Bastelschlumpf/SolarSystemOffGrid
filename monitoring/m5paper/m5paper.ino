@@ -44,7 +44,7 @@ SolarDisplay myDisplay(myData); // The global display helper class
 void setup()
 {
    // Serial default speed 115200
-   InitEPD(true);
+   InitEPD(false);
    if (!StartWiFi(myData.wifiRSSI)) {
       myDisplay.ShowWiFiError(WIFI_SSID);
    } else {

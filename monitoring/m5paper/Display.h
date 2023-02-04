@@ -617,10 +617,13 @@ void SolarDisplay::Show()
    canvas.setTextColor(WHITE, BLACK);
    canvas.setTextDatum(TL_DATUM);
    canvas.createCanvas(maxX, maxY);
-
+   
+   // Clear screen
+   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+   // Draw to screen
    DrawHead(14,  0, maxX - 28, 33);
    DrawBody(14, 34, maxX - 28, maxY - 45);
-
+   // Push screen
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
    delay(1000);
 }
@@ -630,14 +633,18 @@ void SolarDisplay::ShowWiFiError(String ssid)
 {
    Serial.println("SolarDisplay::ShowWiFiError");
 
+   String errMsg = "WiFi error: [" + ssid + "]";
+
    canvas.setTextSize(4);
    canvas.setTextColor(WHITE, BLACK);
    canvas.setTextDatum(TL_DATUM);
    canvas.createCanvas(maxX, maxY);
 
-   String errMsg = "WiFi error: [" + ssid + "]";
+   // Clear screen
+   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+   // Draw to screen
    canvas.drawCentreString(errMsg, maxX / 2, maxY / 2, 1);
-
+   // Push screen
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
    delay(1000);
 }
