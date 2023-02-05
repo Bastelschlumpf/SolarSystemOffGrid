@@ -45,6 +45,7 @@ void setup()
 {
    // Serial default speed 115200
    InitEPD(false);
+   myDisplay.ClearUpdateInfo();
    if (!StartWiFi(myData.wifiRSSI)) {
       myDisplay.ShowWiFiError(WIFI_SSID);
    } else {

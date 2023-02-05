@@ -70,6 +70,7 @@ public:
    {
    }
 
+   void ClearUpdateInfo();
    void Show();
    void ShowWiFiError(String ssid);
 };
@@ -608,6 +609,17 @@ void SolarDisplay::DrawBody(int x, int y, int dx, int dy)
    DrawSolarInfo      (x +  10, y + 316, 912, 168);
 }
 
+/* Clear the update info part. */
+void SolarDisplay::ClearUpdateInfo()
+{
+   Serial.println("SolarDisplay::ClearUpdateInfo");
+   
+   canvas.createCanvas(400, 34);
+   canvas.drawRect(0, 0, 400, 34, M5EPD_Canvas::G0);   
+   canvas.pushCanvas(maxX / 2 - 200, 0, UPDATE_MODE_GC16);
+   canvas.deleteCanvas(); 
+}
+
 /* Fill the screen. */
 void SolarDisplay::Show()
 {
@@ -625,6 +637,7 @@ void SolarDisplay::Show()
    DrawBody(14, 34, maxX - 28, maxY - 45);
    // Push screen
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+   canvas.deleteCanvas(); 
    delay(1000);
 }
 
@@ -646,5 +659,6 @@ void SolarDisplay::ShowWiFiError(String ssid)
    canvas.drawCentreString(errMsg, maxX / 2, maxY / 2, 1);
    // Push screen
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+   canvas.deleteCanvas(); 
    delay(1000);
 }
