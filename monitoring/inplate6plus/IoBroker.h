@@ -517,7 +517,7 @@ void GetIoBrokerValues(MyData &myData)
 
    ioBrokerPPVHistory.getHistoryValues      ("mqtt.0.mppt.PPV");
    ioBrokerPPVYieldHistory.getHistoryValues ("mqtt.0.mppt.H22", 0.01);
-   myData.mppt.yieldHistory.max_ = 3.0; // Max yield to 3 kWh
+   myData.mppt.yieldHistory.max_ = 5.0; // Max yield to 5 kWh/day
 
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.voltage,           "sonoff.0.TasmotaElite.ENERGY_Voltage");
    ioBrokerPlain.getPlainValue(myData.tasmotaElite.ampere,            "sonoff.0.TasmotaElite.ENERGY_Current");
@@ -527,5 +527,5 @@ void GetIoBrokerValues(MyData &myData)
 
    ioBrokerGridHistory.getHistoryValues      ("sonoff.0.TasmotaElite.ENERGY_Power");
    ioBrokerGridYieldHistory.getHistoryValues ("sonoff.0.TasmotaElite.ENERGY_Yesterday");
-   myData.tasmotaElite.yieldHistory.max_ = 3.0; // Max consumption to 3 kWh
+   myData.tasmotaElite.yieldHistory.max_ = 3.0; // Max consumption to 3 kWh/day
 }
