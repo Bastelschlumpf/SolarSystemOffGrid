@@ -527,5 +527,5 @@ void GetIoBrokerValues(MyData &myData)
 
    ioBrokerGridHistory.getHistoryValues      ("sonoff.0.TasmotaElite.ENERGY_Power");
    ioBrokerGridYieldHistory.getHistoryValues ("sonoff.0.TasmotaElite.ENERGY_Yesterday");
-   myData.tasmotaElite.yieldHistory.max_ = 3.0; // Max consumption to 3 kWh/day
+   myData.tasmotaElite.yieldHistory.max_ = 5.0; // Max consumption to 5 kWh/day
 }
