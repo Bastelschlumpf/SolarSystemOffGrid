@@ -52,7 +52,7 @@ Victron Smart MPPT Monitor
 |Relais settings |  |  |
 |Relais-Modus | Standard |  |
 |Relais inverted | yes | In the event of a battery power failure, the system automatically switches to mains power. |
-|Relay low charge | 20% - 80% | I.e. if the battery charge drops below 20% then the relay opens and the system goes on mains power until the charge is back to 80%. |
+|Relay low charge | 10% - 90% | I.e. if the battery charge drops below 10% then the relay opens and the system goes on mains power until the charge is back to 90%. |
 
 
 
