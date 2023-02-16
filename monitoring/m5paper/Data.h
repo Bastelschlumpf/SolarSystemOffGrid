@@ -26,7 +26,7 @@
 
 #define CHARGE_HISTORY_SIZE 725
 #define PPV_HISTORY_SIZE    723
-#define GRID_HISTORY_SIZE   428
+#define GRID_HISTORY_SIZE   425
 
 const DateTime EmptyDateTime(2000, 1, 1, 0, 0, 0);
 

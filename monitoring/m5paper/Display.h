@@ -443,7 +443,7 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
    } else {
       canvas.drawCentreString(voltageInfo + ampereInfo, x + dx / 2, y + 8, 1);
 
-      DrawGraph(x + 7, y + 5, myData.tasmotaElite.powerHistory.size_, dy - 10, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
+      DrawGraph(x + 10, y + 5, myData.tasmotaElite.powerHistory.size_, dy - 10, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
    }
    canvas.setTextSize(2);
    
