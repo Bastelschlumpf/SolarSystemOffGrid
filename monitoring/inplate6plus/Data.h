@@ -62,6 +62,11 @@ public:
       delete [] counts_;
    }
 
+   float getMax()
+   {
+      return ceil(max_);
+   }
+
    void clear()
    {
       memset(values_, 0, size_ * sizeof(float));

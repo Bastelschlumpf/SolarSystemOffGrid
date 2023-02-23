@@ -106,9 +106,9 @@ void SolarDisplay::DrawIcon(int x, int y, const uint16_t *icon, int dx /*= 64*/,
 /* Draw a graph with x- and y-axis and values */
 void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHistory, HistoryData &yieldHistory, HistoryData *chargeHistory /*= NULL*/)
 {
-   String yMinString  = "0"                          + powerHistory.unitName_;
-   String yMaxString1 = String(powerHistory.max_, 0) + powerHistory.unitName_;
-   String yMaxString2 = String(yieldHistory.max_, 0) + yieldHistory.unitName_;
+   String yMinString  = "0"                              + powerHistory.unitName_;
+   String yMaxString1 = String(powerHistory.getMax(), 0) + powerHistory.unitName_;
+   String yMaxString2 = String(yieldHistory.getMax(), 0) + yieldHistory.unitName_;
    int    textWidth   = 5 + max(yMaxString1.length() * 8, yMaxString2.length() * 8);
    int    graphX      = x + 5 + textWidth + 5;
    int    graphY      = y + 25;
@@ -148,12 +148,12 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
       }
    }
 
-   if (powerHistory.max_ > 0) {
-      float yStep = (float) graphDY / (float) powerHistory.max_;
+   if (powerHistory.getMax() > 0) {
+      float yStep = (float) graphDY / (float) powerHistory.getMax();
       
       for (int i = 0; i < powerHistory.size_; i++) {
          float yValue   = powerHistory.values_[i];
-         float yValueDY = (float) graphDY / (float) powerHistory.max_;
+         float yValueDY = (float) graphDY / (float) powerHistory.getMax();
          float xPos     = (float) graphX + graphDX / (float) powerHistory.size_ * i;
          float yPos     = (float) graphY + graphDY - (float) (yValue) * yValueDY;
    
@@ -193,12 +193,12 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
       }
    }
    
-   if (yieldHistory.max_ > 0) {
+   if (yieldHistory.getMax() > 0) {
       String oldDay;
       float  xOld      = graphX;
       float  yOld      = 0.0;
       float  xStep     = (float) graphDX / (float) yieldHistory.size_;
-      float  yValueDY  = (float) graphDY / (float) yieldHistory.max_;
+      float  yValueDY  = (float) graphDY / (float) yieldHistory.getMax();
       float  yMaxValue = 0.0;
 
       for (int i = 0; i < yieldHistory.size_; i++) {
