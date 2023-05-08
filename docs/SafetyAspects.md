@@ -15,6 +15,7 @@
 - The power switching relay circuit and the supply voltage of the battery monitoring system is protected against short circuit by a 1A fuse.
 - The output of the inverter is protected against fault currents by a RCD fuse.
 - The output of the inverter can be remotely disconnected from the grid via a power monitoring system via Wifi.
+- According to the installation connection standard and so that the RCD is functional, one phase of the inverter is defined by means of grounding to a defined potential.
 - The complete system sends its status data to a home control system (IoBroker).
 - An E-Ink display shows all important system data and statistics.
 - The circuit is fireproof mounted on a Fermacell panel.
