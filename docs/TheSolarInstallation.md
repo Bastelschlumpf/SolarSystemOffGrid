@@ -18,6 +18,10 @@
    ![Solar plant](../images/SolarPlant.png "Solar plant")
    ![Solar plant 2](../images/SolarPlant2.png "Solar plant 2")
 
+   The pols of the batteries must be covered from accidental contact.
+   ![BatteryCover1](../images/BatteryCover1.jpg "BatteryCover1")
+   ![BatteryCover1](../images/BatteryCover2.jpg "BatteryCover2")
+
    Thermo images ofv the circuit in action.  
    ![ThermoImage1](../images/ThermoImage1.jpg "ThermoImage1")
    ![ThermoImage2](../images/ThermoImage2.jpg "ThermoImage2")
