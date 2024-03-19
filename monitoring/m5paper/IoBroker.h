@@ -25,7 +25,8 @@
 #define IOBROKER_GET       "/get/"
 #define IOBROKER_GET_PLAIN "/getPlainValue/"
 
-#define REQUEST_TIMEOUT    2000 // msec
+#define CONNECT_TIMEOUT    4000 // msec
+#define REQUEST_TIMEOUT    4000 // msec
 
 class IoBrokerWifiClient; //!< Wifi connection class
 class IoBrokerBase;       //!< Base class for IoBroker communication
@@ -105,11 +106,10 @@ bool IoBrokerWifiClient::connected(bool reconnect /*= true*/)
 void IoBrokerWifiClient::waitForAvailable()
 {
    unsigned long _startMillis = millis();
-   unsigned long _timeout     = client_.getTimeout();
 
    while (!client_.available()) {
-      if (millis() - _startMillis > _timeout) {
-         Serial.println("timeout!");          
+      if (millis() - _startMillis > CONNECT_TIMEOUT) {
+         Serial.println("wait timeout!");          
          client_.stop(); 
          break;
       }
@@ -192,7 +192,7 @@ bool IoBrokerBase::sendRequest(String method, String topic, String param)
             ret = true;
          } else {
             if (millis() - ticks > REQUEST_TIMEOUT) {
-               Serial.println("IoBrokerBase::sendRequest() -> timeout!");
+               Serial.println("IoBrokerBase::sendRequest() -> send timeout!");
                break;
             }
          }
