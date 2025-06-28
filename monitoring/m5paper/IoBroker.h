@@ -78,8 +78,10 @@ bool IoBrokerWifiClient::connect()
    Serial.print("try to connect to IoBroker!");
    if (!client_.connect(IOBROKER_URL, IOBROKER_PORT)) {
       Serial.println(" -> connection failed!");
+      return false;
    } else {
       Serial.println(" -> connected!");
+      return true;
    }
 }
 

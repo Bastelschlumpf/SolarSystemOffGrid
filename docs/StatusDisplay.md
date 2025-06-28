@@ -1,6 +1,16 @@
 
 ## Status display via  E-Ink display (M5Paper)
 
+### Compiling instraction
+
+Board **M5Stack 2.1.4**
+
+Library  
+  **M5EPD 0.1.5 (https://github.com/m5stack/M5EPD)**  
+  **RTCLib 2.1.4 (https://github.com/adafruit/RTClib)**  
+  **Time 1.6.1 (https://playground.arduino.cc/Code/Time)**   
+  Arduino flash with default settings
+
 ### Monitor description
 
 ![Circuit](../images/M5PaperMarkup.png "M5Paper")
