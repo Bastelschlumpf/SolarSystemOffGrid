@@ -116,8 +116,8 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
    int    graphDY     = dy - 25 - 20;
 
    canvas.setTextSize(2);
-   canvas.drawString      (yMaxString2, x + dx - 18, graphY - 5);   
-   canvas.drawRightString (yMaxString1, x + 53,      graphY - 5,            1);   
+   canvas.drawString      (yMaxString2, x + dx - 13, graphY - 15);   
+   canvas.drawRightString (yMaxString1, x + 53,      graphY - 15,           1);   
    canvas.drawRightString (yMinString,  x + 53,      graphY + graphDY - 12, 1);   
 
    canvas.drawLine(x + dx +  8, graphY + 20, x + dx + 18, graphY + 20, M5EPD_Canvas::G15);         
