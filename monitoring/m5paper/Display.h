@@ -22,9 +22,14 @@
 #pragma once
 #include "Data.h"
 #include "Icons.h"
+#include <M5Unified.h>
 
 
-M5EPD_Canvas canvas(&M5.EPD); // Main canvas of the e-paper
+#define GRAYSCALE_0   0   // White
+#define GRAYSCALE_15 15  // Black
+#define GRAYSCALE_8   8   // Medium gray
+
+M5Canvas canvas(&M5.Lcd); // Main canvas of the e-paper
 
 /* Main class for drawing the content to the e-paper display. */
 class SolarDisplay
@@ -95,7 +100,7 @@ void SolarDisplay::DrawIcon(int x, int y, const uint16_t *icon, int dx /*= 64*/,
          uint16_t pixel = icon[yi * dx + xi];
 
          if (highContrast) {
-            if (15 - (pixel / 4096) > 0) canvas.drawPixel(x + xi, y + yi, M5EPD_Canvas::G15);
+            if (15 - (pixel / 4096) > 0) canvas.drawPixel(x + xi, y + yi, GRAYSCALE_15);
          } else {
             canvas.drawPixel(x + xi, y + yi, 15 - (pixel / 4096));
          }
@@ -120,13 +125,13 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
    canvas.drawRightString (yMaxString1, x + 53,      graphY - 15,           1);   
    canvas.drawRightString (yMinString,  x + 53,      graphY + graphDY - 12, 1);   
 
-   canvas.drawLine(x + dx +  8, graphY + 20, x + dx + 18, graphY + 20, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx +  8, graphY + 20, x + dx +  8, graphY + 30, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx -  2, graphY + 30, x + dx +  8, graphY + 30, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx + 18, graphY + 20, x + dx + 18, graphY + 25, M5EPD_Canvas::G15);         
-   canvas.drawLine(x + dx + 18, graphY + 25, x + dx + 28, graphY + 25, M5EPD_Canvas::G15);         
+   canvas.drawLine(x + dx +  8, graphY + 20, x + dx + 18, graphY + 20, GRAYSCALE_15);         
+   canvas.drawLine(x + dx +  8, graphY + 20, x + dx +  8, graphY + 30, GRAYSCALE_15);         
+   canvas.drawLine(x + dx -  2, graphY + 30, x + dx +  8, graphY + 30, GRAYSCALE_15);         
+   canvas.drawLine(x + dx + 18, graphY + 20, x + dx + 18, graphY + 25, GRAYSCALE_15);         
+   canvas.drawLine(x + dx + 18, graphY + 25, x + dx + 28, graphY + 25, GRAYSCALE_15);         
 
-   canvas.drawRect(graphX, graphY, graphDX, graphDY, M5EPD_Canvas::G15);   
+   canvas.drawRect(graphX, graphY, graphDX, graphDY, GRAYSCALE_15);   
 
    if (powerHistory.size_ > 0) {
       String oldDay;
@@ -161,7 +166,7 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
          if (yPos < graphY)           yPos = graphY;
    
          if (i > 0) {
-            canvas.drawLine(xPos, graphY + graphDY, xPos, yPos, M5EPD_Canvas::G15);         
+            canvas.drawLine(xPos, graphY + graphDY, xPos, yPos, GRAYSCALE_15);         
             // Serial.printf("GraphLine: %d %f %d, %d\n", i, yValue, (int) xPos, (int) yPos);
          }
       }
@@ -182,8 +187,8 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
          if (yPos < graphY)           yPos = graphY;
    
          if (yValue && xPos && yPos && xLast && yLast) {
-            canvas.drawLine(xLast, yLast - 0, xPos, yPos - 0, M5EPD_Canvas::G8);         
-            canvas.drawLine(xLast, yLast - 1, xPos, yPos - 1, M5EPD_Canvas::G8);         
+            canvas.drawLine(xLast, yLast - 0, xPos, yPos - 0, GRAYSCALE_8);         
+            canvas.drawLine(xLast, yLast - 1, xPos, yPos - 1, GRAYSCALE_8);         
             //Serial.printf("GraphLine: %d %f %d %d %d %d\n", i, yValue, (int) xLast, (int) yLast, (int) xPos, (int) yPos);
          }
          if (yValue && xPos && yPos) {
@@ -220,16 +225,16 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
                   int    yTextPos        = yPos - 12;
                   String yMaxValueString = String(yMaxValue, 2);
                   
-                  canvas.fillRect(xTextPos - 13, yTextPos - 1, 26, 9, M5EPD_Canvas::G0);   
+                  canvas.fillRect(xTextPos - 13, yTextPos - 1, 26, 9, GRAYSCALE_0);   
                   canvas.drawCentreString(yMaxValueString, xTextPos, yTextPos, 1);
                }
 
                xPos = max((float) graphX + 1, xPos);
                xOld = max((float) graphX + 1, xOld);
-               canvas.drawLine(xOld - 0, yOld - 0, xOld - 0, yPos - 0, M5EPD_Canvas::G15);         
-               canvas.drawLine(xOld - 0, yPos - 0, xPos - 0, yPos - 0, M5EPD_Canvas::G15);         
-               canvas.drawLine(xOld - 1, yOld - 1, xOld - 1, yPos - 1, M5EPD_Canvas::G15);         
-               canvas.drawLine(xOld - 1, yPos - 1, xPos - 1, yPos - 1, M5EPD_Canvas::G15);         
+               canvas.drawLine(xOld - 0, yOld - 0, xOld - 0, yPos - 0, GRAYSCALE_15);         
+               canvas.drawLine(xOld - 0, yPos - 0, xPos - 0, yPos - 0, GRAYSCALE_15);         
+               canvas.drawLine(xOld - 1, yOld - 1, xOld - 1, yPos - 1, GRAYSCALE_15);         
+               canvas.drawLine(xOld - 1, yPos - 1, xPos - 1, yPos - 1, GRAYSCALE_15);         
             }
             oldDay    = day;
             yMaxValue = 0.0;
@@ -342,20 +347,20 @@ void SolarDisplay::DrawHeadRSSI(int x, int y)
 
    canvas.drawRightString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", x - 2, y - 14, 1);
    
-   if (iQuality >= 80) DrawCircle(x + 12, y, 16, M5EPD_Canvas::G15, 225, 315); 
-   if (iQuality >= 40) DrawCircle(x + 12, y, 12, M5EPD_Canvas::G15, 225, 315); 
-   if (iQuality >= 20) DrawCircle(x + 12, y,  8, M5EPD_Canvas::G15, 225, 315); 
-   if (iQuality >= 10) DrawCircle(x + 12, y,  4, M5EPD_Canvas::G15, 225, 315); 
-   if (iQuality >=  0) DrawCircle(x + 12, y,  2, M5EPD_Canvas::G15, 225, 315); 
+   if (iQuality >= 80) DrawCircle(x + 12, y, 16, GRAYSCALE_15, 225, 315); 
+   if (iQuality >= 40) DrawCircle(x + 12, y, 12, GRAYSCALE_15, 225, 315); 
+   if (iQuality >= 20) DrawCircle(x + 12, y,  8, GRAYSCALE_15, 225, 315); 
+   if (iQuality >= 10) DrawCircle(x + 12, y,  4, GRAYSCALE_15, 225, 315); 
+   if (iQuality >=  0) DrawCircle(x + 12, y,  2, GRAYSCALE_15, 225, 315); 
 }
 
 /* Draw the state of charge. */
 void SolarDisplay::DrawHeadBattery(int x, int y)
 {
-   canvas.drawRect(x, y, 40, 16, M5EPD_Canvas::G15);
-   canvas.drawRect(x + 40, y + 3, 4, 10, M5EPD_Canvas::G15);
+   canvas.drawRect(x, y, 40, 16, GRAYSCALE_15);
+   canvas.drawRect(x + 40, y + 3, 4, 10, GRAYSCALE_15);
    for (int i = x; i < x + 40; i++) {
-      canvas.drawLine(i, y, i, y + 15, M5EPD_Canvas::G15);
+      canvas.drawLine(i, y, i, y + 15, GRAYSCALE_15);
       if ((i - x) * 100.0 / 40.0 > myData.batteryCapacity) {
          break;
       }
@@ -377,7 +382,7 @@ void SolarDisplay::DrawBatteryInfo(int x, int y, int dx, int dy)
    String   chargedEnergyInfo              = FormatString("+%.1f kWh",    myData.bmv.chargedEnergy / 100,                 5);
    String   dischargedEnergyInfo           = FormatString("-%.1f kWh",    myData.bmv.dischargedEnergy / 100,              5);
 
-   canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
+   canvas.drawRect(x, y, dx, dy, GRAYSCALE_15);
 
    if (myData.bmv.alarmReason > 0.0) {
       canvas.setTextSize(3);
@@ -432,7 +437,7 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
    String   voltageInfo = FormatString("%.0fV", myData.tasmotaElite.voltage, 8);
    String   ampereInfo  = FormatString("%.2fA", myData.tasmotaElite.ampere,  8);
 
-   canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
+   canvas.drawRect(x, y, dx, dy, GRAYSCALE_15);
 
    if (myData.tasmotaElite.alive == "false") {
       canvas.setTextSize(3);
@@ -461,7 +466,7 @@ void SolarDisplay::DrawBatterySymbol(int x, int y, int dx, int dy)
    int state         = zero - (zero - full) / 100.0 * stateOfCharge;
 
    for (int i = zero; i > full; i--) {
-      canvas.drawLine(x + 6, i, x + dx - 7, i, M5EPD_Canvas::G15);
+      canvas.drawLine(x + 6, i, x + dx - 7, i, GRAYSCALE_15);
       if (i < state) {
          break;
       }
@@ -555,7 +560,7 @@ void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
    String   mainVoltageInfo    = FormatString("%.2f V ", myData.mppt.mainVoltage / 1000.0,  10);
    String   batteryCurrentInfo = FormatString("%.2f A ", myData.mppt.batteryCurrent / 1000, 10);
 
-   canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
+   canvas.drawRect(x, y, dx, dy, GRAYSCALE_15);
 
    canvas.drawString("Panel",            x + 14, y +  14);
    canvas.drawString(panelVoltageInfo,   x + 14, y +  39);
@@ -593,7 +598,7 @@ void SolarDisplay::DrawHead(int x, int y, int dx, int dy)
 /* Draw the whole solar information body. */
 void SolarDisplay::DrawBody(int x, int y, int dx, int dy)
 {
-   canvas.drawRect(x, y, dx, dy, M5EPD_Canvas::G15);
+   canvas.drawRect(x, y, dx, dy, GRAYSCALE_15);
 
    DrawBatteryInfo    (x +  10, y +  10, 250, 166);
    DrawSolarSymbol    (x + 276, y +  30, 150, 150);
@@ -614,51 +619,44 @@ void SolarDisplay::ClearUpdateInfo()
 {
    Serial.println("SolarDisplay::ClearUpdateInfo");
    
-   canvas.createCanvas(400, 34);
-   canvas.drawRect(0, 0, 400, 34, M5EPD_Canvas::G0);   
-   canvas.pushCanvas(maxX / 2 - 200, 0, UPDATE_MODE_GC16);
-   canvas.deleteCanvas(); 
+   M5Canvas sprite(&M5.Lcd);
+   sprite.createSprite(400, 34);
+   sprite.fillRect(0, 0, 400, 34, GRAYSCALE_0);
+   M5.Lcd.startWrite();
+   sprite.pushSprite(maxX / 2 - 200, 0);
+   sprite.deleteSprite();
+   M5.Lcd.endWrite(); //
 }
 
 /* Fill the screen. */
 void SolarDisplay::Show()
 {
-   Serial.println("SolarDisplay::DrawSolarInfo");
-
+   Serial.println("SolarDisplay::Show");
    canvas.setTextSize(2);
-   canvas.setTextColor(WHITE, BLACK);
+   canvas.setTextColor(GRAYSCALE_15, GRAYSCALE_0); // Black on white
    canvas.setTextDatum(TL_DATUM);
-   canvas.createCanvas(maxX, maxY);
-   
-   // Clear screen
-   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   // Draw to screen
-   DrawHead(14,  0, maxX - 28, 33);
+
+   M5.Lcd.startWrite();
+   M5.Lcd.fillScreen(GRAYSCALE_0);
+   DrawHead(14, 0, maxX - 28, 33);
    DrawBody(14, 34, maxX - 28, maxY - 45);
-   // Push screen
-   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   canvas.deleteCanvas(); 
+   M5.Lcd.endWrite();
    delay(1000);
 }
 
-/* Show WiFi connewction error. */
+/* Display WiFi connection error */
 void SolarDisplay::ShowWiFiError(String ssid)
 {
    Serial.println("SolarDisplay::ShowWiFiError");
-
    String errMsg = "WiFi error: [" + ssid + "]";
 
    canvas.setTextSize(4);
-   canvas.setTextColor(WHITE, BLACK);
+   canvas.setTextColor(GRAYSCALE_15, GRAYSCALE_0);
    canvas.setTextDatum(TL_DATUM);
-   canvas.createCanvas(maxX, maxY);
 
-   // Clear screen
-   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   // Draw to screen
-   canvas.drawCentreString(errMsg, maxX / 2, maxY / 2, 1);
-   // Push screen
-   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   canvas.deleteCanvas(); 
+   M5.Lcd.startWrite();
+   M5.Lcd.fillScreen(GRAYSCALE_0);
+   canvas.drawString(errMsg, maxX / 2 - errMsg.length() * 12, maxY / 2);
+   M5.Lcd.endWrite();
    delay(1000);
 }

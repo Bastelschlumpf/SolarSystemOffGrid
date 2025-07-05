@@ -20,7 +20,7 @@
   * Main file with setup() and loop()
   */
   
-#include <M5EPD.h>
+#include <M5Unified.h>
 #include "RTClib.h"
 #include <TimeLib.h>
 #include <HTTPClient.h>
@@ -32,7 +32,6 @@
 #include "EPD.h"
 #include "EPDWifi.h"
 #include "IoBroker.h"
-#include "SHT30.h"
 #include "RTCTime.h"
 #include "Utils.h"
 
@@ -51,7 +50,6 @@ void setup()
    } else {
       UpdateRTCFromNTP();
       GetBatteryValues(myData);
-      GetSHT30Values(myData);
       GetIoBrokerValues(myData);
       myData.Dump();
       myDisplay.Show();
@@ -61,7 +59,7 @@ void setup()
    // Save battery at night.
    if (myData.mppt.batteryCurrent > 0.0) {
       ShutdownEPD(60 * 60);     // every hour
-   } else {
+   } else { // Night
       ShutdownEPD(2 * 60 * 60); // every two hour
    }
 }

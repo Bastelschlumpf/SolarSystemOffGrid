@@ -162,10 +162,8 @@ public:
    int          wifiRSSI;         //!< The wifi signal strength
    float        batteryVolt;      //!< The current battery voltage
    int          batteryCapacity;  //!< The current battery capacity
-   int          sht30Temperatur;  //!< SHT30 temperature
-   int          sht30Humidity;    //!< SHT30 humidity
 
-   BMV          bmv;              //!< The BMW data
+   BMV          bmv;              //!< The BMV data
    MPPT         mppt;             //!< The MPPT data
    TasmotaElite tasmotaElite;     //!< The Tasmota Elite data
 
@@ -174,8 +172,6 @@ public:
       : wifiRSSI(0)
       , batteryVolt(0.0)
       , batteryCapacity(0)
-      , sht30Temperatur(0)
-      , sht30Humidity(0)
    {
    }
 
@@ -188,13 +184,11 @@ public:
 /* helper function to dump all the collected data */
 void MyData::Dump()
 {
-   Serial.println("DateTime: "         + getRTCDateTimeString());
+   Serial.println("DateTime: "        + getRTCDateTimeString());
     
-   Serial.println("WifiRSSI: "         + String(wifiRSSI));
-   Serial.println("BatteryVolt: "      + String(batteryVolt));
-   Serial.println("BatteryCapacity: "  + String(batteryCapacity));
-   Serial.println("Sht30Temperatur: "  + String(sht30Temperatur));
-   Serial.println("Sht30Humidity: "    + String(sht30Humidity));
+   Serial.println("WifiRSSI: "        + String(wifiRSSI));
+   Serial.println("BatteryVolt: "     + String(batteryVolt));
+   Serial.println("BatteryCapacity: " + String(batteryCapacity));
    
    bmv.Dump();
    mppt.Dump();

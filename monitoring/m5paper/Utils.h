@@ -59,10 +59,10 @@ class HistoryData
 {
 public:
    int       size_;     //!< Size of the history items.
-   float    *values_;   //!< Histpry double values.
+   float    *values_;   //!< History float values.
    DateTime *dates_;    //!< History timeline.
    String    unitName_; //!< Unit Name of the values
-   int      *counts_;   //!< Occurence.
+   int      *counts_;   //!< Occurrence.
    float     max_;      //!< Max value.
 
 public:
@@ -106,46 +106,50 @@ String StringPrintf(char *fmt, ... )
    memset(buf, 0, sizeof(buf));
    va_list args;
    va_start (args, fmt );
-   vsnprintf(buf, 255, fmt, args);
+   vsnprintf(buf, sizeof(buf), fmt, args);
    va_end (args);
-   return (String) buf;
+   return String(buf);
 }
 
 /* Convert the RTC date time to DD.MM.YYYY HH:MM:SS */
 String getRTCDateTimeString() 
 {
-   char       buff[32];
-   rtc_date_t date_struct;
-   rtc_time_t time_struct;
+   char           buff[32];
+   m5::rtc_date_t date_struct;
+   m5::rtc_time_t time_struct;
    
-   M5.RTC.getDate(&date_struct);
-   M5.RTC.getTime(&time_struct);
+   M5.Rtc.getDate(&date_struct);
+   M5.Rtc.getTime(&time_struct);
 
-   sprintf(buff,"%02d.%02d.%04d %02d:%02d:%02d",
-      date_struct.day,  date_struct.mon, date_struct.year,
-      time_struct.hour, time_struct.min, time_struct.sec);
+   sprintf(buff, "%02d.%02d.%04d %02d:%02d:%02d",
+      date_struct.date,
+      date_struct.month,
+      date_struct.year + 2000,
+      time_struct.hours,
+      time_struct.minutes,
+      time_struct.seconds);
 
-   return (String) buff;
+   return String(buff);
 }
 
 /* Read the RTC timestamp */
 time_t GetRTCTime()
 {
-  tmElements_t tmSet;
-  rtc_date_t   date_struct;
-  rtc_time_t   time_struct;
+   tmElements_t   tmSet;
+   m5::rtc_date_t date_struct;
+   m5::rtc_time_t time_struct;
    
-  M5.RTC.getDate(&date_struct);
-  M5.RTC.getTime(&time_struct);
+   M5.Rtc.getDate(&date_struct);
+   M5.Rtc.getTime(&time_struct);
   
-  tmSet.Year   = date_struct.year - 1970;
-  tmSet.Month  = date_struct.mon;
-  tmSet.Day    = date_struct.day;
-  tmSet.Hour   = time_struct.hour;
-  tmSet.Minute = time_struct.min;
-  tmSet.Second = time_struct.sec;
+   tmSet.Year   = date_struct.year + 30; // 2000 - 1970 = 30
+   tmSet.Month  = date_struct.month;
+   tmSet.Day    = date_struct.date;
+   tmSet.Hour   = time_struct.hours;
+   tmSet.Minute = time_struct.minutes;
+   tmSet.Second = time_struct.seconds;
   
-  return makeTime(tmSet);
+   return makeTime(tmSet);
 }
 
 /* UTC date to local time. */
@@ -172,29 +176,29 @@ time_t UtcToLocalTime(time_t utcTime)
 /* Convert the date part of the RTC timestamp */
 String getRTCDateString() 
 {
-   char       buff[32];
-   rtc_date_t date_struct;
+   char           buff[32];
+   m5::rtc_date_t date_struct;
    
-   M5.RTC.getDate(&date_struct);
+   M5.Rtc.getDate(&date_struct);
 
    sprintf(buff,"%02d.%02d.%04d",
-      date_struct.day, date_struct.mon, date_struct.year);
+      date_struct.date, date_struct.month, date_struct.year + 2000);
 
-   return (String) buff;
+   return String(buff);
 }
 
 /* Convert the time part of the RTC timestamp */
 String getRTCTimeString() 
 {
-   char       buff[32];
-   rtc_time_t time_struct;
+   char           buff[32];
+   m5::rtc_time_t time_struct;
    
-   M5.RTC.getTime(&time_struct);
+   M5.Rtc.getTime(&time_struct);
 
    sprintf(buff,"%02d:%02d:%02d",      
-      time_struct.hour, time_struct.min, time_struct.sec);
+      time_struct.hours, time_struct.minutes, time_struct.seconds);
 
-   return (String) buff;
+   return String(buff);
 }
 
 /* Convert the time_t to the DD.MM.YYYY HH:MM:SS format */
@@ -206,10 +210,10 @@ String getDateTimeString(time_t rawtime)
       day(rawtime), month(rawtime), year(rawtime),
       hour(rawtime), minute(rawtime), second(rawtime));
 
-   return (String) buff;
+   return String(buff);
 }
 
-/* Convert the time_t to the DD.MM.YYYY HH:MM:SS format */
+/* Convert the DateTime to the IoBroker ISO8601 format */
 String getIoBrokerDateTimeString(DateTime dateTime)
 {
    char buff[40];
@@ -218,7 +222,7 @@ String getIoBrokerDateTimeString(DateTime dateTime)
       dateTime.year(), dateTime.month(),  dateTime.day(),
       dateTime.hour(), dateTime.minute(), dateTime.second());
 
-   return (String) buff;
+   return String(buff);
 }
 
 /* Convert the time_t to the date part DD.MM.YYYY */
@@ -229,7 +233,7 @@ String getDateString(time_t rawtime)
    sprintf(buff,"%02d.%02d.%04d",
       day(rawtime), month(rawtime), year(rawtime));
 
-   return (String) buff;
+   return String(buff);
 }
 
 /* Convert the time_t to the time part HH:MM:SS format */
@@ -240,7 +244,7 @@ String getTimeString(time_t rawtime)
    sprintf(buff,"%02d:%02d:%02d",
       hour(rawtime), minute(rawtime), second(rawtime));
 
-   return (String) buff;
+   return String(buff);
 }
 
 /* Convert the hour of the time_t */
@@ -251,10 +255,10 @@ String getHourString(time_t rawtime)
    sprintf(buff,"%02d",
       hour(rawtime));
 
-   return (String) buff;
+   return String(buff);
 }
 
-/* Convert the minute of the time_t */
+/* Convert the hour and minute of the time_t */
 String getHourMinString(time_t rawtime)
 {
    char buff[32];
@@ -262,10 +266,10 @@ String getHourMinString(time_t rawtime)
    sprintf(buff,"%02d:%02d",
       hour(rawtime), minute(rawtime));
 
-   return (String) buff;
+   return String(buff);
 }
 
-/* Convert the rssi value to a string value between 0 and 100 % */
+/* Convert the RSSI value to a string value between 0 and 100 % */
 String WifiGetRssiAsQuality(int rssi)
 {
    int quality = 0;
@@ -280,7 +284,7 @@ String WifiGetRssiAsQuality(int rssi)
    return String(quality);
 }
 
-/* Convert the rssi value to a int value between 0 and 100 % */
+/* Convert the RSSI value to an int value between 0 and 100 % */
 int WifiGetRssiAsQualityInt(int rssi)
 {
    int quality = 0;

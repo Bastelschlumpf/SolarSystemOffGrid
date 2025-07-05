@@ -21,19 +21,23 @@
   */
 #pragma once
 
+#define GRAYSCALE_0  0
+
 /* Initialize the M5Paper */
 void InitEPD(bool clearDisplay = true)
 {
-   M5.begin(false, false, true, true, false);
-   M5.RTC.begin();
-   
-   M5.EPD.SetRotation(0);
-   M5.TP.SetRotation(0);
-   if (clearDisplay) {
-      M5.EPD.Clear(true);
-   }
+   Serial.println("InitEPD: Initializing M5PaperS3");
 
-//   disableCore0WDT();
+   auto cfg = M5.config();
+
+   cfg.external_rtc = true;
+   M5.begin(cfg);
+   Serial.println("InitEPD: M5PaperS3 initialized");
+   M5.Lcd.setRotation(0);
+   if (clearDisplay) {
+      M5.Lcd.fillScreen(GRAYSCALE_0);
+   }
+   // disableCore0WDT();
 }
 
 /* 
@@ -44,12 +48,8 @@ void InitEPD(bool clearDisplay = true)
 void ShutdownEPD(int sec)
 {
    Serial.println("Shutdown (" + String((int) (sec / 60)) + " min)");
-/*
-   M5.disableEPDPower();
-   M5.disableEXTPower();
-   M5.disableMainPower();
-   esp_sleep_enable_timer_wakeup(sec * 1000000);
-   esp_deep_sleep_start();   
-*/   
-   M5.shutdown(sec);
+   Serial.flush();
+   delay(100); 
+   esp_sleep_enable_timer_wakeup(sec * 1000000ULL);
+   esp_deep_sleep_start();
 }

@@ -28,27 +28,11 @@
   */
 bool GetBatteryValues(MyData &myData)
 {
-   uint32_t vol = M5.getBatteryVoltage();
+   myData.batteryVolt     = M5.Power.getBatteryVoltage();
+   myData.batteryCapacity = M5.Power.getBatteryLevel();
 
-   if (vol < 3400) {
-      vol = 3400;
-   } else if (vol > 4100) {
-      vol = 4100;
-   }
-  
-   float battery = (float)(vol - 3400) / (float)(4100 - 3400);
-
-   myData.batteryVolt = vol / 1000.0f;
-   Serial.println("batteryVolt: " + String(myData.batteryVolt));
-   
-   if (battery <= 0.01) {
-      battery = 0.01;
-   }
-   if (battery > 1) {
-      battery = 1;
-   }
-   myData.batteryCapacity = (int) (battery * 100);
+   Serial.println("batteryVolt: "     + String(myData.batteryVolt));
    Serial.println("batteryCapacity: " + String(myData.batteryCapacity));
-   
+
    return true;
 }

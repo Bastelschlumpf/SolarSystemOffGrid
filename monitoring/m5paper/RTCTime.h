@@ -23,26 +23,28 @@
 #include "time.h"
 
 /* Update the internal rtc */
-void updateRTC() 
+void updateRTC()
 {
-  rtc_date_t RTCDate;
-  rtc_time_t RTCtime;
-  struct tm  timeinfo;
-  
-  if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
-    return;
-  }
+   struct tm timeinfo;
+   
+   if (!getLocalTime(&timeinfo)) {
+      Serial.println("updateRTC: Failed to obtain system time");
+      return;
+   }
 
-  RTCtime.hour = timeinfo.tm_hour;
-  RTCtime.min  = timeinfo.tm_min;
-  RTCtime.sec  = timeinfo.tm_sec;
-  M5.RTC.setTime(&RTCtime);
+   m5::rtc_time_t RTCtime;
+   RTCtime.hours = timeinfo.tm_hour;
+   RTCtime.minutes = timeinfo.tm_min;
+   RTCtime.seconds = timeinfo.tm_sec;
+   M5.Rtc.setTime(&RTCtime);
 
-  RTCDate.year = timeinfo.tm_year + 1900;
-  RTCDate.mon  = timeinfo.tm_mon + 1;
-  RTCDate.day  = timeinfo.tm_mday;
-  M5.RTC.setDate(&RTCDate);
+   m5::rtc_date_t RTCDate;
+   RTCDate.month = timeinfo.tm_mon + 1;
+   RTCDate.date = timeinfo.tm_mday;
+   RTCDate.year = timeinfo.tm_year + 1900; // Full year (e.g., 2025)
+   M5.Rtc.setDate(&RTCDate);
+
+   Serial.println("updateRTC: RTC updated to " + getRTCDateTimeString());
 }
 
 /* Set the internal RTC clock with the weather timestamp */
