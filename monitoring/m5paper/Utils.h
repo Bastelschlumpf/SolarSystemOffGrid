@@ -124,7 +124,7 @@ String getRTCDateTimeString()
    sprintf(buff, "%02d.%02d.%04d %02d:%02d:%02d",
       date_struct.date,
       date_struct.month,
-      date_struct.year + 2000,
+      date_struct.year,
       time_struct.hours,
       time_struct.minutes,
       time_struct.seconds);
@@ -141,14 +141,14 @@ time_t GetRTCTime()
    
    M5.Rtc.getDate(&date_struct);
    M5.Rtc.getTime(&time_struct);
-  
-   tmSet.Year   = date_struct.year + 30; // 2000 - 1970 = 30
+
+   tmSet.Year   = date_struct.year - 1970;
    tmSet.Month  = date_struct.month;
    tmSet.Day    = date_struct.date;
    tmSet.Hour   = time_struct.hours;
    tmSet.Minute = time_struct.minutes;
    tmSet.Second = time_struct.seconds;
-  
+
    return makeTime(tmSet);
 }
 
@@ -182,7 +182,7 @@ String getRTCDateString()
    M5.Rtc.getDate(&date_struct);
 
    sprintf(buff,"%02d.%02d.%04d",
-      date_struct.date, date_struct.month, date_struct.year + 2000);
+      date_struct.date, date_struct.month, date_struct.year);
 
    return String(buff);
 }
@@ -197,18 +197,6 @@ String getRTCTimeString()
 
    sprintf(buff,"%02d:%02d:%02d",      
       time_struct.hours, time_struct.minutes, time_struct.seconds);
-
-   return String(buff);
-}
-
-/* Convert the time_t to the DD.MM.YYYY HH:MM:SS format */
-String getDateTimeString(time_t rawtime)
-{
-   char buff[32];
-   
-   sprintf(buff,"%02d.%02d.%04d %02d:%02d:%02d",
-      day(rawtime), month(rawtime), year(rawtime),
-      hour(rawtime), minute(rawtime), second(rawtime));
 
    return String(buff);
 }

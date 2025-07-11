@@ -33,15 +33,15 @@ void updateRTC()
    }
 
    m5::rtc_time_t RTCtime;
-   RTCtime.hours = timeinfo.tm_hour;
+   RTCtime.hours   = timeinfo.tm_hour;
    RTCtime.minutes = timeinfo.tm_min;
    RTCtime.seconds = timeinfo.tm_sec;
    M5.Rtc.setTime(&RTCtime);
 
    m5::rtc_date_t RTCDate;
    RTCDate.month = timeinfo.tm_mon + 1;
-   RTCDate.date = timeinfo.tm_mday;
-   RTCDate.year = timeinfo.tm_year + 1900; // Full year (e.g., 2025)
+   RTCDate.date  = timeinfo.tm_mday;
+   RTCDate.year  = (timeinfo.tm_year + 1900);
    M5.Rtc.setDate(&RTCDate);
 
    Serial.println("updateRTC: RTC updated to " + getRTCDateTimeString());
