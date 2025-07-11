@@ -39,9 +39,10 @@ void updateRTC()
    M5.Rtc.setTime(&RTCtime);
 
    m5::rtc_date_t RTCDate;
-   RTCDate.month = timeinfo.tm_mon + 1;
-   RTCDate.date  = timeinfo.tm_mday;
-   RTCDate.year  = (timeinfo.tm_year + 1900);
+   RTCDate.month   = timeinfo.tm_mon + 1;
+   RTCDate.date    = timeinfo.tm_mday;
+   RTCDate.year    = (timeinfo.tm_year + 1900);
+   RTCDate.weekDay = timeinfo.tm_wday;
    M5.Rtc.setDate(&RTCDate);
 
    Serial.println("updateRTC: RTC updated to " + getRTCDateTimeString());
@@ -50,6 +51,9 @@ void updateRTC()
 /* Set the internal RTC clock with the weather timestamp */
 void UpdateRTCFromNTP()
 {
+   struct timeval tv = {0, 0};
+   settimeofday(&tv, nullptr);   
+
    configTime(0, 3600, "pool.ntp.org");
    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
    tzset();

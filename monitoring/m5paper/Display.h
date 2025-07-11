@@ -375,9 +375,9 @@ void SolarDisplay::DrawBatteryInfo(int x, int y, int dx, int dy)
    } else if (myData.bmv.lastChange == EmptyDateTime) {
       canvas.setTextSize(3);
       canvas.drawString("no data", x + 45, y + 70);
-   /*} else if (timeSpan.totalseconds() > 60 * 60) {
+   } else if (timeSpan.totalseconds() > 60 * 60) {
       canvas.setTextSize(3);
-      canvas.drawString("no update", x + 45, y + 70); */
+      canvas.drawString("no update", x + 45, y + 70);
    } else {
       canvas.drawString(mainVoltageInfo,                x +   2, y +  14);
       canvas.drawString(batteryCurrenInfot,             x +   2, y +  34);
@@ -427,10 +427,9 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
    if (myData.tasmotaElite.alive == "false") {
       canvas.setTextSize(3);
       canvas.drawString("switched off", x + 100, y + 70);
-   /*} else if (timeSpan.totalseconds() > 60 * 60) {
+   } else if (timeSpan.totalseconds() > 60 * 60) {
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 100, y + 70);
-      */
    } else {
       canvas.drawCentreString(voltageInfo + ampereInfo, x + dx / 2, y + 8, 1);
 
@@ -562,10 +561,9 @@ void SolarDisplay::DrawSolarInfo(int x, int y, int dx, int dy)
    } else if (myData.mppt.lastChange == EmptyDateTime) {
       canvas.setTextSize(3);
       canvas.drawString("no data", x + 300, y + 70);
-   /*} else if (timeSpan.totalseconds() > 60 * 60) {
+   } else if (timeSpan.totalseconds() > 60 * 60) {
       canvas.setTextSize(3);
       canvas.drawString("no update", x + 300, y + 70);
-      */
    } else {
       DrawGraph(x + 140, y - 5, myData.mppt.ppvHistory.size_, dy + 5, myData.mppt.ppvHistory, myData.mppt.yieldHistory, &myData.bmv.chargeHistory);
    }
@@ -609,7 +607,6 @@ void SolarDisplay::ClearUpdateInfo()
    
    canvas.createSprite(400, 34);
    canvas.fillSprite(WHITE);
-   canvas.fillRect(0, 0, 400, 34, WHITE);
    canvas.pushSprite(maxX / 2 - 200, 0);
    canvas.deleteSprite();
    M5.Lcd.waitDisplay();

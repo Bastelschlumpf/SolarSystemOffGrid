@@ -30,7 +30,8 @@ void InitEPD(bool clearDisplay = true)
 
    auto cfg = M5.config();
 
-   cfg.external_rtc = true;
+   cfg.external_rtc  = true;
+   cfg.clear_display = false;
    M5.begin(cfg);
    Serial.println("InitEPD: M5PaperS3 initialized");
    M5.Lcd.setRotation(1);
