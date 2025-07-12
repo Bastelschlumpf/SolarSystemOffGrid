@@ -51,6 +51,8 @@ void ShutdownEPD(int sec)
    Serial.println("Shutdown (" + String((int) (sec / 60)) + " min)");
    Serial.flush();
    delay(100); 
-   esp_sleep_enable_timer_wakeup(sec * 1000000ULL);
+   M5.Rtc.clearIRQ();
+   M5.Rtc.setAlarmIRQ(sec);
+   delay(10);
    esp_deep_sleep_start();
 }

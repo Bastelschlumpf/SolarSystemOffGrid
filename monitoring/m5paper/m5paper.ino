@@ -59,9 +59,9 @@ void setup()
 
    // Save battery at night.
    if (myData.mppt.batteryCurrent > 0.0) {
-      ShutdownEPD(60 * 60);     // every hour
+      ShutdownEPD(60 * 60); // every hour
    } else { // Night
-      ShutdownEPD(2 * 60 * 60); // every two hour
+      ShutdownEPD(2 * 60 * 60); // every two hours
    }
 }
 
