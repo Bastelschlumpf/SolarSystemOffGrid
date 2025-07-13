@@ -30,6 +30,7 @@ void InitEPD(bool clearDisplay = true)
 
    auto cfg = M5.config();
 
+   cfg.fallback_board = m5::board_t::board_M5PaperS3;
    cfg.external_rtc  = true;
    cfg.clear_display = false;
    M5.begin(cfg);
@@ -48,11 +49,36 @@ void InitEPD(bool clearDisplay = true)
 */
 void ShutdownEPD(int sec)
 {
-   Serial.println("Shutdown (" + String((int) (sec / 60)) + " min)");
-   Serial.flush();
-   delay(100); 
-   M5.Rtc.clearIRQ();
-   M5.Rtc.setAlarmIRQ(sec);
-   delay(10);
-   esp_deep_sleep_start();
+   Serial.begin(115200);
+   Serial.println("Shutdown ("        + String((int) (sec / 60)) + " min)");
+   Serial.println("Battery Voltage: " + String(M5.Power.getBatteryVoltage()) + " mV");
+
+   // Disable E-Ink display
+   M5.Display.sleep();
+   M5.Display.waitDisplay();
+
+   // Disable WiFi and Bluetooth
+   WiFi.mode(WIFI_OFF);
+   btStop();
+
+   // Disable main power pin
+   #define M5EPD_MAIN_PWR_PIN GPIO_NUM_2
+   pinMode(M5EPD_MAIN_PWR_PIN, OUTPUT);
+   digitalWrite(M5EPD_MAIN_PWR_PIN, LOW);
+   gpio_hold_en(M5EPD_MAIN_PWR_PIN);
+   gpio_deep_sleep_hold_en();
+
+   // Configure unused GPIOs for low power
+   int unused_pins[] = {1, 3, 5, 6, 7, 10, 16, 17, 18, 21, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48};
+   for (int i = 0; i < sizeof(unused_pins) / sizeof(unused_pins[0]); i++) {
+      pinMode(unused_pins[i], INPUT_PULLUP);
+      gpio_hold_en((gpio_num_t) unused_pins[i]);
+  }
+
+   // Configure touch interrupt pin
+   pinMode(GPIO_NUM_36, INPUT_PULLUP);
+   gpio_hold_en(GPIO_NUM_36);
+
+   // Enable deep sleep with timer
+   M5.Power.deepSleep((uint64_t) sec * 1000000);
 }
