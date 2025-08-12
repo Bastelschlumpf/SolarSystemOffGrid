@@ -25,9 +25,10 @@
 #include "esp_wifi.h"
 #include "esp_bt.h"
 
-#define GRAYSCALE_0         0 // Black
-#define DISPLAY_POWER_PIN  23 // Power Supply for IT8951 and GT911
-#define M5EPD_MAIN_PWR_PIN  2 // Main power supply (MOSFET)
+#define GRAYSCALE_0           0  // Black
+#define DISPLAY_POWER_PIN    23  // Power Supply for IT8951 and GT911
+#define M5EPD_MAIN_PWR_PIN    2  // Main power supply (MOSFET)
+#define BMI270_ADDRESS     0x69  // BMI
 
 /* Initialize the M5Paper */
 void InitEPD(bool clearDisplay = true)
@@ -38,9 +39,20 @@ void InitEPD(bool clearDisplay = true)
    auto cfg = M5.config();
 
    cfg.fallback_board = m5::board_t::board_M5PaperS3;
-   cfg.external_rtc  = true;
-   cfg.clear_display = false;
+   cfg.clear_display          = false;
+   cfg.internal_imu           = false;
+   cfg.external_imu           = false;
+   cfg.internal_rtc           = true;
+   cfg.external_rtc           = false;
+   cfg.internal_spk           = false;
+   cfg.internal_mic           = false;
+   cfg.output_power           = false;
+   cfg.serial_baudrate        = 0;
+   cfg.led_brightness         = 0;
+   cfg.external_display_value = 0x00;
+   cfg.external_speaker_value = 0x00;
    M5.begin(cfg);
+
    M5.Lcd.setRotation(1);
    if (clearDisplay) {
       M5.Lcd.fillScreen(GRAYSCALE_0);
@@ -53,30 +65,20 @@ void InitEPD(bool clearDisplay = true)
  *  NOTE: the M5Paper could not shutdown while on usb connection.
  *        In this case use the esp_deep_sleep_start() function.
 */
-/* 
- *  Shutdown the M5Paper with lowest possible power consumption
- *  NOTE: the M5Paper could not shutdown while on usb connection.
- *        In this case use the esp_deep_sleep_start() function.
-*/
 void ShutdownEPD(int sec) 
 {
    Serial.println("Shutdown (" + String((int)(sec / 60)) + " min)");
    Serial.println("Battery Voltage: " + String(M5.Power.getBatteryVoltage()) + " mV");
 
    // Power down E-Ink display completely
-   /*
    pinMode((gpio_num_t)DISPLAY_POWER_PIN, OUTPUT);
    digitalWrite(DISPLAY_POWER_PIN, LOW);
    gpio_hold_en((gpio_num_t)DISPLAY_POWER_PIN);
-   */
+   
    M5.Display.powerSaveOn();
    M5.Display.sleep();
    M5.Display.waitDisplay();
 
-   // Disable all peripherals
-   // M5.Speaker.end();
-   M5.Imu.sleep();
-   
    // Completely disable all radio functions
    WiFi.disconnect(true, true);
    WiFi.mode(WIFI_OFF);
@@ -85,25 +87,20 @@ void ShutdownEPD(int sec)
    esp_bt_controller_disable();
    esp_bt_mem_release(ESP_BT_MODE_BTDM);
 
-   // Configure unused GPIOs for low power
-   int unused_pins[] = {1, 3, 5, 6, 7, 10, 16, 17, 18, 21, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48};
-   for (int i = 0; i < sizeof(unused_pins) / sizeof(unused_pins[0]); i++) {
-      pinMode(unused_pins[i], INPUT_PULLUP);
-      gpio_hold_en((gpio_num_t) unused_pins[i]);
-   }
-
    // Disable main power rail
    pinMode((gpio_num_t)M5EPD_MAIN_PWR_PIN, OUTPUT);
    digitalWrite(M5EPD_MAIN_PWR_PIN, LOW);
    gpio_hold_en((gpio_num_t)M5EPD_MAIN_PWR_PIN);
    
+   // Switch off Serial
+   Serial.end();
+
    // Configure power domains for deepest sleep
    gpio_deep_sleep_hold_en();
    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
    esp_sleep_pd_config(ESP_PD_DOMAIN_XTAL, ESP_PD_OPTION_OFF);
    esp_sleep_pd_config(ESP_PD_DOMAIN_VDDSDIO, ESP_PD_OPTION_OFF);
 
-   // Enable deep sleep with timer
-   esp_sleep_enable_timer_wakeup((uint64_t)sec * 1000000);
-   esp_deep_sleep_start();
+   M5.Rtc.setAlarmIRQ(sec);
+   M5.Power.powerOff();
 }
