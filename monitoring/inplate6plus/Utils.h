@@ -29,10 +29,10 @@ String getRTCDateTimeString()
 {
    char buff[32];
    
-   display.rtcGetRtcData();
+   display.rtc.getRtcData();
    sprintf(buff, "%02d.%02d.%04d %02d:%02d:%02d",
-      display.rtcGetDay(),  display.rtcGetMonth(),  display.rtcGetYear() + 2000,
-      display.rtcGetHour(), display.rtcGetMinute(), display.rtcGetSecond());
+      display.rtc.getDay(),  display.rtc.getMonth(),  display.rtc.getYear(),
+      display.rtc.getHour(), display.rtc.getMinute(), display.rtc.getSecond());
 
    return (String) buff;
 }
@@ -42,13 +42,13 @@ time_t GetRTCTime()
 {
    tmElements_t tmSet;
    
-   display.rtcGetRtcData();
-   tmSet.Year   = display.rtcGetYear() + 2000 - 1970;
-   tmSet.Month  = display.rtcGetMonth();
-   tmSet.Day    = display.rtcGetDay();
-   tmSet.Hour   = display.rtcGetHour();
-   tmSet.Minute = display.rtcGetMinute();
-   tmSet.Second = display.rtcGetSecond();
+   display.rtc.getRtcData();
+   tmSet.Year   = display.rtc.getYear() - 1970;
+   tmSet.Month  = display.rtc.getMonth();
+   tmSet.Day    = display.rtc.getDay();
+   tmSet.Hour   = display.rtc.getHour();
+   tmSet.Minute = display.rtc.getMinute();
+   tmSet.Second = display.rtc.getSecond();
 
    // Serial.printf("*** %02d.%02d.%04d %02d:%02d:%02d\n", 
    //    tmSet.Day, tmSet.Month, tmSet.Year + 1970, tmSet.Hour, tmSet.Minute, tmSet.Second);
@@ -83,9 +83,9 @@ String getRTCDateString()
 {
    char buff[32];
 
-   display.rtcGetRtcData();
+   display.rtc.getRtcData();
    sprintf(buff, "%02d.%02d.%04d",
-      display.rtcGetDay(),  display.rtcGetMonth(),  display.rtcGetYear() + 2000);
+      display.rtc.getDay(),  display.rtc.getMonth(),  display.rtc.getYear());
 
    return (String) buff;
 }
@@ -95,9 +95,9 @@ String getRTCTimeString()
 {
    char buff[32];
    
-   display.rtcGetRtcData();
+   display.rtc.getRtcData();
    sprintf(buff, "%02d:%02d:%02d",
-      display.rtcGetHour(), display.rtcGetMinute(), display.rtcGetSecond());
+      display.rtc.getHour(), display.rtc.getMinute(), display.rtc.getSecond());
 
    return (String) buff;
 }

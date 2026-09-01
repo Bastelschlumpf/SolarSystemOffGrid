@@ -260,6 +260,9 @@ void SolarDisplay::DrawGraph(int x, int y, int dx, int dy, HistoryData &powerHis
          if (oldDay != day) {
             float yPos = graphY + graphDY - yMaxValue * yValueDY;
 
+            if (yPos > graphY + graphDY) yPos = graphY + graphDY;
+            if (yPos < graphY)           yPos = graphY;
+
             if (xOld > 0 && xPos > graphX) {
                if (yMaxValue > 0) {
                   int    xTextPos        = xOld + (xPos - xOld) / 2;
@@ -487,10 +490,9 @@ void SolarDisplay::DrawGridInfo(int x, int y, int dx, int dy)
       display.setTextSize(3);
       DrawString("no update", x + 100, y + 70);
    } else {
-      DrawString(voltageInfo, x + 14, y + 14);
-      DrawString(ampereInfo,  x + 14, y + 34);
+      DrawCentreString(voltageInfo + " " + ampereInfo, x + (dx / 2), y + 10);
 
-      DrawGraph(x + 120, y - 5, myData.tasmotaElite.powerHistory.size_, dy, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
+      DrawGraph(x + 10, y + 30, dx - 45, dy - 35, myData.tasmotaElite.powerHistory, myData.tasmotaElite.yieldHistory);
    }
    display.setTextSize(2);
    DrawIcon(x + dx - 40, y + dy - 40, (uint16_t *) image_data_HouseIconSmall, 30, 30);

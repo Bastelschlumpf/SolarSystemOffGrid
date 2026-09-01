@@ -30,10 +30,10 @@ void InitEPD(bool clearDisplay = true)
    display.begin();
 
    // Turn frontlight on
-   display.frontlight(1);
-   display.setFrontlight(10);
+   display.frontlight.setState(true);
+   display.frontlight.setBrightness(10);
    delay(100);
-   display.frontlight(0);
+   display.frontlight.setState(false);
 
    if (clearDisplay) {
       display.clearDisplay();
@@ -49,10 +49,10 @@ void ShutdownEPD(int sec)
 {
    Serial.println("Shutdown");
 
-   display.tsShutdown();                            // Turn off the display touchscreen
-   display.frontlight(0);                           // Turn off the frontlight
+   display.touchscreen.shutdown();                  // Turn off the display touchscreen
+   display.frontlight.setState(false);              // Turn off the frontlight
    rtc_gpio_isolate(GPIO_NUM_12);                   // Isolate/disable GPIO12 on ESP32 (only to reduce power consumption in sleep)
-   esp_sleep_enable_timer_wakeup(sec * 1000000);    // Activate wake-up timer -- wake up after sec here
+   esp_sleep_enable_timer_wakeup((uint64_t) sec * 1000000);    // Activate wake-up timer -- wake up after sec here
    esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, LOW);  // Enable wakeup from deep sleep on gpio 36 (wake button)
    esp_deep_sleep_start();                          // Put ESP32 into deep sleep. Program stops here.    
 }

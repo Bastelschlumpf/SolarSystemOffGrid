@@ -48,7 +48,7 @@ void UpdateRTCFromNTP()
    Serial.print(F("Current time: "));
    Serial.print(asctime(&timeinfo));    
 
-   display.rtcReset();
-   display.rtcSetDate(0, timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900 - 2000);
-   display.rtcSetTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+   display.rtc.reset();
+   display.rtc.setDate(0, timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+   display.rtc.setTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 }

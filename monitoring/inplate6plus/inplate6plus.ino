@@ -58,7 +58,7 @@ void setup()
       myDisplay.Show();
       StopWiFi();
    }
-   ShutdownEPD(10 * 60); // every 10 minutes
+   ShutdownEPD(60 * 60); // every 60 minutes
 }
 
 /* Main loop. Never reached because of shutdown */
